@@ -1,0 +1,26 @@
+# Set the Main class of our program. #
+--class-path src
+--main Main
+
+# Defines #
+--define analyzer-optimize
+--define HXCPP_M64
+--define no-console
+
+--define windows
+--define HXCPP_CHECK_POINTER
+--define HXCPP_STACK_LINE
+--define HAXE_OUTPUT_PART=BlueprintFunkin
+--dce no
+
+# Libraries (haxelib git blueprint https://github.com/BlueprintFramework-Team/Blueprint)
+--library blueprint 
+
+# Compile, copy assets, and run. #
+--cpp bin
+
+--cmd Xcopy assets\ bin\assets\ /E /H /C /I /Y /Q
+--cmd Xcopy globalAssets\ bin\globalAssets\ /E /H /C /I /Y /Q
+
+--cmd cd bin
+--cmd BlueprintFunkin.exe
