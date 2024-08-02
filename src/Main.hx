@@ -1,6 +1,7 @@
 package;
 
 import scenes.Title;
+import bindings.CppHelpers;
 import blueprint.Game;
 
 class Main {
