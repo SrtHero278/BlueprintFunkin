@@ -34,7 +34,7 @@ class Gameplay extends blueprint.Scene {
 
         add(stage = new Group(-640, -540));
         stage.add(spectator = new Character(400, 130, "gf"));
-        stage.add(opponent = new Character(100, 100, "pico"));
+        stage.add(opponent = new Character(100, 100, "dad"));
         stage.add(player = new Character(770, 100, "bf", true));
 
         for(i in 0...strumlines.length) {
