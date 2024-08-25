@@ -1,5 +1,6 @@
 package scenes;
 
+import blueprint.Game;
 import blueprint.tweening.BaseTween;
 import objects.SparrowText;
 import objects.HealthIcon;
@@ -10,8 +11,6 @@ import blueprint.tweening.PropertyTween;
 import blueprint.sound.SoundData;
 import blueprint.text.Text;
 import blueprint.graphics.Texture;
-import math.MathExtras;
-import music.Conductor;
 import blueprint.sound.SoundPlayer;
 import blueprint.objects.Sprite;
 import bindings.Glfw;
@@ -25,16 +24,11 @@ import bindings.Glfw;
 class Title extends BaseMenu {
     var options:Array<TitleOpt>;
     var logo:Sprite;
-    var music:SoundPlayer;
     var sound:SoundPlayer;
     var leftArrow:Sprite;
     var rightArrow:Sprite;
     var optSprite:Sprite;
     var targetScale:Float = 0.9;
-
-    var debug:Text;
-    var countedFrames:Int = 0;
-    var tmr:Float = 0;
 
     public function new() {
         super();
@@ -47,6 +41,9 @@ class Title extends BaseMenu {
             trySelect: SongList.trySelect
         }];
 
+        Song.setCurrentAsBasic("menus/music", "Freaky Menu", 102);
+        Song.current.looping = true;
+        Song.current.play();
         Conductor.reset(102);
         Conductor.beatOffset = -0.05;
         Conductor.onBeat.add(beatHit);
@@ -64,10 +61,6 @@ class Title extends BaseMenu {
         add(rightArrow = new Sprite(640 + optSprite.width * 0.5 + 25, 650, Paths.image("menus/arrow")));
         rightArrow.flipX = true;
 
-        add(debug = new Text(10, 10, Paths.font("montserrat"), 20, "4114\n4114"));
-        debug.anchor.set();
-
-        music = new SoundPlayer(Paths.audio("menus/music"), true, true, 0.5);
         sound = new SoundPlayer(Paths.audio("menus/scroll"), false, false, 1.0);
 
         acceptTwn = new PropertyTween(this, {
@@ -96,16 +89,14 @@ class Title extends BaseMenu {
         super.update(elapsed);
 
         logo.scale.set(MathExtras.lerp(logo.scale.x, targetScale, elapsed * 10));
-        Conductor.position = music.time - elapsed;
         Conductor.update(elapsed);
+    }
 
-        tmr += elapsed;
-        countedFrames++;
-        if (tmr >= 1.0) {
-            tmr = 0;
-            debug.text = Std.string(countedFrames);
-            countedFrames = 0;
-        }
+    override function keyDown(keyCode:Int, scanCode:Int, mods:Int) {
+        if (keyCode == acceptKeybind && cancelInput)
+            acceptFinish(sound);
+        else
+            super.keyDown(keyCode, scanCode, mods);
     }
 
     override function changeItem() {
@@ -115,10 +106,11 @@ class Title extends BaseMenu {
         sound.play(0.0);
     }
 
-    var acceptTwn:PropertyTween;
+    public var acceptTwn:PropertyTween;
     function acceptFinish(snd) {
         cancelInput = false;
         sound.finished.remove(acceptFinish);
+        sound.data = SoundData.getSoundData(Paths.audio("menus/scroll"));
         acceptTwn.reverse = false;
         acceptTwn.start();
         options[curItem].onSelect();

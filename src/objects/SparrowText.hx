@@ -1,5 +1,6 @@
 package objects;
 
+import math.Vector2;
 import blueprint.objects.AnimatedSprite;
 import blueprint.objects.Sprite;
 
@@ -53,7 +54,7 @@ class SparrowText extends AnimatedSprite {
                 _curX += defaultAdvance;
 		}
 	}
-	override function prepareShaderVars(anchorX:Float, anchorY:Float) {
+	override function prepareShaderVars() {
 		final frame = (frames == null || frames.length <= 0) ? AnimatedSprite.backupFrame : frames[curFrame];
 		final uMult = bindings.CppHelpers.boolToInt(flipX);
 		final vMult = bindings.CppHelpers.boolToInt(flipY);
@@ -73,8 +74,8 @@ class SparrowText extends AnimatedSprite {
 		if (rotation != 0)
 			shader.transform.rotate(_sinMult, _cosMult, Sprite._refVec3.set(0, 0, 1));
 		shader.transform.translate(Sprite._refVec3.set(
-            position.x + positionOffset.x + (_textWidth * scale.x) * (0.5 - anchor.x),
-            position.y + positionOffset.y + (_textHeight * scale.y) * (0.5 - anchor.y),
+            position.x + renderOffset.x,
+            position.y + renderOffset.y,
             0
 		));
 		shader.setUniform("transform", shader.transform);
@@ -86,6 +87,16 @@ class SparrowText extends AnimatedSprite {
 			((sourceRect.y + frame.sourceY) + sourceHeight * (1 - vMult)) / texture.height
 		);
 	}
+
+    override function calcRenderOffset(?parentScale:Vector2, ?parentSin:Float, ?parentCos:Float) {
+		renderOffset.copyFrom(positionOffset);
+		if (parentScale != null)
+			renderOffset.multiplyEq(parentScale);
+		renderOffset.x += (_textWidth * scale.x) * (0.5 - anchor.x);
+		renderOffset.y += (_textHeight * scale.y) * (0.5 - anchor.y);
+		if (parentSin != null && parentSin != null)
+			renderOffset.rotate(parentSin, parentCos);
+    }
 
     function updateTextSize() {
         _queueSize = false;

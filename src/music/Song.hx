@@ -1,68 +1,41 @@
 package music;
 
-// still gotta update this. this was from Camellia-Blueprint.
+// this is possibly over complicating it........
 
+import haxe.io.Path;
 import sys.FileSystem;
-import sys.io.File;
-import haxe.Json;
 import blueprint.sound.SoundPlayer;
 
-@:structInit class ChartNote {
-	public var time:Float;
-	public var lane:Int;
-	public var length:Float;
-}
-
 class Song {
+	public static var current:Song;
+
+	public var time(get, set):Float;
+	public var looping(get, set):Bool;
 	public var name:String = "idk";
-	public var diff:String = "idk";
-	public var chars:Array<String> = ["bf", "camellia", "gf"];
-	public var stage:String = "stage";
-	public var bpm:Float = 120;
-	public var speed:Float = 3.0;
-	public var notes:Array<ChartNote> = [];
 	public var bpmChanges:Array<Array<Float>> = [];
 	public var audio:Array<SoundPlayer> = [];
 
-	public function new(path:String, diff:String) {
-		var tmr = Sys.time();
-		this.diff = diff;
-		final folder = 'assets/songs/$path/';
+	public function new(name:String, bpms:Array<Array<Float>>) {
+		this.name = name;
+		this.bpmChanges = bpms;
+	}
 
-		try {
-			Sys.println(folder + 'diffs/$diff.json');
-			final json = Json.parse(File.getContent(folder + 'diffs/$diff.json')).song;
-			name = json.song;
-			chars = [json.player1, json.player2, "gf"];
-			stage = json.stage;
-			bpm = json.bpm;
-			speed = json.speed;
+	function get_time():Float {
+		return (audio.length > 0) ? audio[0].time : 0;
+	}
+	function set_time(to:Float):Float {
+		for (sound in audio)
+			sound.time = to;
+		return get_time();
+	}
 
-			var curBeat:Float = 0;
-			for (section in cast (json.notes, Array<Dynamic>)) {
-				for (note in cast(section.sectionNotes, Array<Dynamic>)) {
-					note = cast cast(note, Array<Dynamic>);
-					final data:ChartNote = {
-						time: note[0] * 0.001,
-						lane: Math.floor(note[1] % 8),
-						length: Math.max(note[2], 0.0) * 0.001
-					}
-					if (section.mustHitSection)
-						data.lane = (data.lane + 4) % 8;
-					notes.push(data);
-				}
-
-				if (section.changeBPM && section.bpm != null)
-					bpmChanges.push([curBeat, section.bpm]);
-				curBeat += (section.sectionBeats != null) ? section.sectionBeats : (section.lengthInSteps != null) ? section.lengthInSteps * 0.25 : 4;
-			}
-			notes.sort(sortNotes);
-		} catch (e) {
-			Sys.println('Failed to load JSON for $path: $e');
-		}
-
-		Sys.println('Loaded JSON for $path (${Math.round((Sys.time() - tmr) * 1000) * 0.001} s)');
-		loadSongs(path);
+	function get_looping():Bool {
+		return (audio.length > 0) ? audio[0].looping : false;
+	}
+	function set_looping(to:Bool):Bool {
+		for (sound in audio)
+			sound.looping = to;
+		return get_looping();
 	}
 
 	public function play() {
@@ -74,36 +47,49 @@ class Song {
 		for (sound in audio)
 			sound.pause();
 	}
-	
-	public function resync() {
-		for (sound in audio)
-			sound.time = Conductor.position;
-	}
 
 	public function destroy() {
 		for (sound in audio)
 			sound.destroy();
 	}
 
-	function sortNotes(note1:ChartNote, note2:ChartNote) {
-		return Math.floor(note1.time - note2.time);
+	function loadAudio(path:String) {
+		if (FileSystem.exists(path)) {
+			var tmr = Sys.time();
+			var sound = new SoundPlayer(path);
+			sound.gain = 0.25;
+			sound.keepOnSwitch = true;
+			@:privateAccess if (sound.data != null)
+				audio.push(sound);
+			else
+				sound.destroy();
+
+			Sys.println('Loaded $path (${Math.round((Sys.time() - tmr) * 1000) * 0.001} s)');
+		}
 	}
 
-	function loadSongs(path:String) {
-		final folder = 'assets/songs/$path/audio';
-		if (FileSystem.exists(folder)) {
-			for (file in FileSystem.readDirectory(folder)) {
-				var tmr = Sys.time();
-				var sound = new SoundPlayer(folder + '/$file');
-				sound.gain = 0.25;
-				sound.keepOnSwitch = true;
-				@:privateAccess if (sound.data != null)
-					audio.push(sound);
-				else
-					sound.destroy();
+	public static function setCurrentFromChart(path:String, diff:String):GameSong {
+		var audio = (current != null) ? current.audio : null;
+		var reloadAudio = (current == null || !Std.isOfType(current, GameSong) || cast(current, GameSong).path != path);
 
-				Sys.println('Loaded $file for $path (${Math.round((Sys.time() - tmr) * 1000) * 0.001} s)');
-			}
-		}
+		if (reloadAudio && current != null)
+			current.destroy();
+		var gameSong = new GameSong(path, diff);
+		current = gameSong;
+
+		if (reloadAudio)
+			current.loadAudio(path);
+		else
+			current.audio = audio;
+		return gameSong;
+	}
+
+	public static function setCurrentAsBasic(path:String, name:String, bpm:Float, ?bpms:Array<Array<Float>>):Song {
+		if (current != null)
+			current.destroy();
+		bpms = (bpms != null) ? bpms : [[0, 0, bpm, 60 / bpm]];
+		current = new Song(name, bpms);
+		current.loadAudio(Paths.audio(path));
+		return current;
 	}
 }

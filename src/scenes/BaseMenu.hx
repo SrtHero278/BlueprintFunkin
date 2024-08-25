@@ -1,6 +1,5 @@
 package scenes;
 
-import blueprint.input.InputHandler;
 import bindings.Glfw;
 
 class BaseMenu extends blueprint.Scene {
