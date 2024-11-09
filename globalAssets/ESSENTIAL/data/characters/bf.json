@@ -1,7 +1,7 @@
 {
   "spritesheet": "BOYFRIEND",
   "icon": "bf",
-  "commonType": "player",
+  "faceLeft": true,
   "offsets": {
     "x": 0,
     "y": 350,
@@ -12,99 +12,80 @@
     {
       "name": "idle",
       "prefix": "BF idle dance",
-      "offsets": [-5, 0],
+      "offsets": [5, 0],
       "animType": "DANCING"
     },
     {
       "name": "singLEFT",
       "prefix": "BF NOTE LEFT0",
-      "offsets": [5, -6]
+      "offsets": [-5, 6]
     },
     {
       "name": "singDOWN",
       "prefix": "BF NOTE DOWN0",
-      "offsets": [-20, -51]
+      "offsets": [20, 51]
     },
     {
       "name": "singUP",
       "prefix": "BF NOTE UP0",
-      "offsets": [-46, 27]
+      "offsets": [46, -27]
     },
     {
       "name": "singRIGHT",
       "prefix": "BF NOTE RIGHT0",
-      "offsets": [-48, -7]
+      "offsets": [48, 7]
     },
     {
       "name": "singLEFTmiss",
       "prefix": "BF NOTE LEFT MISS",
-      "offsets": [7, 19]
+      "offsets": [-7, -19]
     },
     {
       "name": "singDOWNmiss",
       "prefix": "BF NOTE DOWN MISS",
-      "offsets": [-15, -19]
+      "offsets": [15, 19]
     },
     {
       "name": "singUPmiss",
       "prefix": "BF NOTE UP MISS",
-      "offsets": [-46, 27]
+      "offsets": [46, -27]
     },
     {
       "name": "singRIGHTmiss",
       "prefix": "BF NOTE RIGHT MISS",
-      "offsets": [-44, 22]
+      "offsets": [44, -22]
     },
     {
       "name": "hey",
       "prefix": "BF HEY",
-      "offsets": [-3, 5]
+      "offsets": [3, -5]
     },
     {
       "name": "hurt",
       "prefix": "BF hit",
-      "offsets": [14, 18]
+      "offsets": [-14, -18]
     },
     {
       "name": "scared",
       "prefix": "BF idle shaking",
-      "offsets": [-4, 0],
+      "offsets": [4, 0],
       "looped": true,
       "animType": "CAN_DANCE"
     },
     {
       "name": "dodge",
       "prefix": "boyfriend dodge",
-      "offsets": [-10, -16]
+      "offsets": [10, 16]
     },
     {
       "name": "attack",
       "prefix": "boyfriend attack",
-      "offsets": [294, 267]
+      "offsets": [-294, -267]
     },
     {
       "name": "pre-attack",
       "prefix": "bf pre attack",
-      "offsets": [-40, -40]
-    },
-    {
-      "name": "firstDeath",
-      "prefix": "BF dies",
-      "offsets": [37, 11],
-      "animType": "CHAIN",
-      "chainAnim": "deathLoop"
-    },
-    {
-      "name": "deathLoop",
-      "prefix": "BF Dead Loop",
-      "offsets": [37, 5],
-      "looped": true
-    },
-    {
-      "name": "deathConfirm",
-      "prefix": "BF Dead confirm",
-      "offsets": [37, 69]
+      "offsets": [40, 40]
     }
-  ],
-  "flipX": true
+  ]
 }

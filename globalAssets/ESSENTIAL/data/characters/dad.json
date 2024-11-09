@@ -1,7 +1,7 @@
 {
   "spritesheet": "DADDY_DEAREST",
   "icon": "dad",
-  "commonType": "opponent",
+  "faceLeft": false,
   "offsets": {
     "x": 0,
     "y": 0,
@@ -12,22 +12,22 @@
     {
       "name": "singLEFT",
       "prefix": "Dad Sing Note LEFT",
-      "offsets": [-9, 10]
+      "offsets": [9, -10]
     },
     {
       "name": "singDOWN",
       "prefix": "Dad Sing Note DOWN",
-      "offsets": [0, -30]
+      "offsets": [0, 30]
     },
     {
       "name": "singUP",
       "prefix": "Dad Sing Note UP",
-      "offsets": [-6, 50]
+      "offsets": [6, -50]
     },
     {
       "name": "singRIGHT",
       "prefix": "Dad Sing Note RIGHT",
-      "offsets": [0, 27]
+      "offsets": [0, -27]
     },
     {
       "name": "idle",

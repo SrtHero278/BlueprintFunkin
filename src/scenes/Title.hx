@@ -93,6 +93,10 @@ class Title extends BaseMenu {
     }
 
     override function keyDown(keyCode:Int, scanCode:Int, mods:Int) {
+        if (keyCode == Glfw.KEY_8) {
+            Game.changeSceneTo(scenes.CharEdit);
+        }
+
         if (keyCode == acceptKeybind && cancelInput)
             acceptFinish(sound);
         else

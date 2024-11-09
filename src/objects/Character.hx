@@ -1,5 +1,6 @@
 package objects;
 
+import haxe.ds.Vector;
 import math.Vector2;
 import haxe.Json;
 import sys.io.File;
@@ -13,13 +14,12 @@ typedef CharJson = {
 	var spritesheet:String;
 	var icon:String;
 
-	var commonType:String;
+	var faceLeft:Bool;
 	var offsets:CharOffsets;
 	var animations:Array<JsonAnim>;
 
 	var ?scale:Float;
 	var ?scaleAffectsOffset:Bool;
-	var ?flipX:Bool;
 	var ?antialiasing:Bool;
 	var ?singLength:Float;
 }
@@ -58,8 +58,9 @@ class Character extends blueprint.objects.AnimatedSprite {
 	public var chains:Map<String, String> = [];
 	public var data:CharJson;
 	public var curChar:String = "";
-	public var isPlayer:Bool = false;
+	public var facingLeft:Bool = false;
 	public var debugMode:Bool = false;
+	public var camOffset:Vector2 = new Vector2(0.0, 0.0);
 	var curAnimType:AnimType = CAN_DANCE;
 	var holdTimer:Float = 0.0;
 	var danceWidth:Float = 0;
@@ -67,10 +68,10 @@ class Character extends blueprint.objects.AnimatedSprite {
 	var danceStep:Int = -1;
 
 
-	public function new(x:Float, y:Float, char:String = "bf", isPlayer:Bool = false) {
+	public function new(x:Float, y:Float, char:String = "bf", facingLeft:Bool = false) {
 		var tmr = Sys.time();
 		super(x, y);
-		this.isPlayer = isPlayer;
+		this.facingLeft = facingLeft;
 		anchor.set();
 		loadCharacter(char);
 		music.Conductor.onBeat.add(dance);
@@ -80,9 +81,11 @@ class Character extends blueprint.objects.AnimatedSprite {
 	public function loadCharacter(charName:String) {
 		if (curChar == charName) return; //No need to load if they're already loaded.
 
-		offsets = [];
-		types = [];
-		danceAnims = [];
+		offsets.clear();
+		types.clear();
+		animData.clear();
+		chains.clear();
+		danceAnims.splice(0, danceAnims.length);
 		curChar = charName;
 		try {
 			data = Json.parse(File.getContent(Paths.file('data/characters/$curChar.json')));
@@ -94,7 +97,6 @@ class Character extends blueprint.objects.AnimatedSprite {
 
 		if (data.scale == null) data.scale = 1;
 		if (data.scaleAffectsOffset == null) data.scaleAffectsOffset = false;
-		if (data.flipX == null) data.flipX = false;
 		if (data.antialiasing == null) data.antialiasing = true;
 		if (data.singLength == null) data.singLength = 4;
 
@@ -104,12 +106,12 @@ class Character extends blueprint.objects.AnimatedSprite {
 			addAnim(anim);
 
 		scale.setFull(data.scale, data.scale);
-		scale.x *= 1 - 2 * bindings.CppHelpers.boolToInt(data.flipX != isPlayer);
 		positionOffset.setFull(data.offsets.x, data.offsets.y);
+		camOffset.setFull(data.offsets.camX, data.offsets.camY);
 		antialiasing = data.antialiasing;
 
 		danceStep = -1;
-		dance(0);
+		forceDance();
 	}
 
 	public function addAnim(anim:JsonAnim) {
@@ -125,6 +127,8 @@ class Character extends blueprint.objects.AnimatedSprite {
 			type = ["can_dance", "dancing", "singing", "chain"].indexOf(anim.animType.toLowerCase());
 		types.set(anim.name, type);
 
+		danceAnims.remove(anim.name);
+		chains.remove(anim.name);
 		if (type == DANCING) {
 			danceAnims.push(anim.name);
 			danceWidth = animData[anim.name].width;
@@ -166,6 +170,13 @@ class Character extends blueprint.objects.AnimatedSprite {
 		playAnim(danceAnims[danceStep], false);
 	}
 
+	public function forceDance() {
+		if (danceAnims.length <= 0) return;
+
+		danceStep = (danceStep + 1) % danceAnims.length;
+		playAnim(danceAnims[danceStep], false);
+	}
+
 	override function playAnim(newAnim:String, ?forceRestart:Bool = true) {
 		if (!animData.exists(newAnim)) return;
 
@@ -176,7 +187,7 @@ class Character extends blueprint.objects.AnimatedSprite {
 		
 		animWidth = animData[curAnim].width;
 		animHeight = animData[curAnim].height;
-		dynamicOffset.setFull(-offsets[curAnim][0], -offsets[curAnim][1]);
+		dynamicOffset.setFull(offsets[curAnim][0], offsets[curAnim][1]);
 
 		holdTimer = (curAnimType == SINGING) ? 0.0 : holdTimer;
 	}
@@ -187,8 +198,10 @@ class Character extends blueprint.objects.AnimatedSprite {
 			renderOffset.multiplyEq(parentScale);
 		renderOffset.x += width * 0.5 - (animWidth * scale.x) * anchor.x;
 		renderOffset.y += height * 0.5 - (animHeight * scale.y) * anchor.y;
-		if (scale.x < 0)
+		if (facingLeft != data.faceLeft) {
+			scale.x *= -1;
 			renderOffset.x -= (danceWidth * scale.x) * (1.0 - anchor.x);
+		}
 		if (parentSin != null && parentCos != null)
 			renderOffset.rotate(parentSin, parentCos);
 	}

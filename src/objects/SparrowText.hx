@@ -3,6 +3,7 @@ package objects;
 import math.Vector2;
 import blueprint.objects.AnimatedSprite;
 import blueprint.objects.Sprite;
+import blueprint.text.Text.TextAlignment;
 
 // might modify this later on but this will do.
 // Basically blueprint.objects.Text but with AnimatedSprite stuff.
@@ -15,8 +16,9 @@ class SparrowText extends AnimatedSprite {
 	var _lineWidths:Array<Float> = [];
 	var _textWidth:Float;
 	var _textHeight:Float;
+	var _lineMult:Float = 0.5;
 	public var text(default, set):String;
-	public var alignment:blueprint.text.Text.TextAlignment = MIDDLE;
+	public var alignment(default, set):TextAlignment = MIDDLE;
 
     var _curX:Float = 0;
     var _curLine:Int = 0;
@@ -40,7 +42,7 @@ class SparrowText extends AnimatedSprite {
             var charAt = text.charAt(i);
 			if (charAt == '\n') {
 				_curLine++;
-				_curX = (_textWidth - _lineWidths[_curLine]) * (alignment * 0.5);
+				_curX = (_textWidth - _lineWidths[_curLine]) * _lineMult;
 				continue;
 			}
 
@@ -141,4 +143,19 @@ class SparrowText extends AnimatedSprite {
         _queueSize = _queueSize || (text != newText);
         return text = newText;
     }
+
+	function set_alignment(newAlign:TextAlignment) {
+		switch (newAlign) {
+			case Left | LEFT:
+				_lineMult = 0;
+				alignment = Left;
+			case Middle | Center | MIDDLE | CENTER:
+				_lineMult = 0.5;
+				alignment = Center;
+			case Right | RIGHT:
+				_lineMult = 1.0;
+				alignment = Right;
+		}
+		return alignment;
+	}
 }

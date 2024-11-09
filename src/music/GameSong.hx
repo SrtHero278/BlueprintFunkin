@@ -31,7 +31,7 @@ class GameSong extends Song {
 			final jsonPath = Paths.songFile('diffs/$diff.json', path);
 			final json = Json.parse(File.getContent(jsonPath)).song;
 			name = json.song;
-			chars = [json.player1, json.player2, "gf"];
+			chars = [json.player1 != null ? json.player1 : "bf", json.player2 != null ? json.player2 : "dad", json.gfVersion != null ? json.gfVersion : "gf"];
 			stage = json.stage;
 			bpms = [[0, 0, json.bpm, 60 / json.bpm]];
 			speed = json.speed;
