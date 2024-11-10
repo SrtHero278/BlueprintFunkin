@@ -24,7 +24,7 @@ class SparrowText extends AnimatedSprite {
     var _curLine:Int = 0;
 
     public function new(x:Float, y:Float, text:String) {
-        super(x, y, Paths.file("images/menus/bold.xml"));
+        super(x, y, Paths.sparrowXml("menus/bold"));
         this.text = text;
     }
 

@@ -26,6 +26,7 @@ class Paths {
 
     public static function font(path:String, ?ext:String = ".ttf") {return file("fonts/" + path + ext);}
     public static function image(path:String) {return file("images/" + path + ".png");}
+    public static function sparrowXml(path:String) {return file("images/" + path + ".xml");}
     public static function audio(path:String) {return file("audio/" + path + ".ogg");}
     public static function songFile(path:String, song:String) {return file("songs/" + song + "/" + path);}
 }

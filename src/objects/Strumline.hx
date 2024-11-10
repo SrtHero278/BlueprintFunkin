@@ -25,8 +25,8 @@ class Strumline extends Group {
 		hit = new Signal();
 		missed = new Signal();
 
-		add(strums = new Group(0, -244));
-		add(notes = new Group(0, -244));
+		add(strums = new Group(0, -255));
+		add(notes = new Group(0, -255));
 
 		final directions = ["left", "down", "up", "right"];
 		for (i in 0...4) {

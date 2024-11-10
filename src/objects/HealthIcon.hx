@@ -7,6 +7,7 @@ class HealthIcon extends blueprint.objects.Sprite {
     public var iconScale:Float = 1.0;
     public var iconSteps:Int = 2;
     public var health(default, set):Float = 1.0;
+    public var invertHealth:Bool = false;
 
     public function new(x:Float, y:Float, icon:String) {
         super(x, y);
@@ -26,7 +27,8 @@ class HealthIcon extends blueprint.objects.Sprite {
     }
 
     function set_health(value:Float) {
-        sourceRect.x = sourceRect.width * (CppHelpers.boolToInt(health < 0.4) + CppHelpers.boolToInt(health > 1.6) * 2);
+        var hp = invertHealth ? (1.0 - value) : value;
+        sourceRect.x = sourceRect.width * (CppHelpers.boolToInt(hp < 0.2) + CppHelpers.boolToInt(hp > 0.8) * 2);
         return health = value;
     }
 }

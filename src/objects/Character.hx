@@ -100,7 +100,7 @@ class Character extends blueprint.objects.AnimatedSprite {
 		if (data.antialiasing == null) data.antialiasing = true;
 		if (data.singLength == null) data.singLength = 4;
 
-		loadFrames(Paths.file('images/game/characters/${data.spritesheet}.xml'));
+		loadFrames(Paths.sparrowXml('game/characters/' + data.spritesheet));
 
 		for (anim in data.animations)
 			addAnim(anim);
@@ -156,6 +156,16 @@ class Character extends blueprint.objects.AnimatedSprite {
 		}
 	}
 
+	override function draw() {
+		var scaleMult = (facingLeft != data.faceLeft) ? -1.0 : 1.0;
+		var posOffset = (facingLeft != data.faceLeft) ? (danceWidth * scale.x) * (1.0 - anchor.x) : 0;
+		scale.x *= scaleMult;
+		positionOffset.x += posOffset;
+		super.draw();
+		scale.x *= scaleMult;
+		positionOffset.x -= posOffset;
+	}
+
 	public function dance(beat) {
 		// Sys.println(curChar + " | " + curAnim + " | " + curAnimType);
 		var stopDance = switch (curAnimType) {
@@ -190,19 +200,5 @@ class Character extends blueprint.objects.AnimatedSprite {
 		dynamicOffset.setFull(offsets[curAnim][0], offsets[curAnim][1]);
 
 		holdTimer = (curAnimType == SINGING) ? 0.0 : holdTimer;
-	}
-
-	override function calcRenderOffset(?parentScale:Vector2, ?parentSin:Float, ?parentCos:Float) {
-		renderOffset.copyFrom(positionOffset);
-		if (parentScale != null)
-			renderOffset.multiplyEq(parentScale);
-		renderOffset.x += width * 0.5 - (animWidth * scale.x) * anchor.x;
-		renderOffset.y += height * 0.5 - (animHeight * scale.y) * anchor.y;
-		if (facingLeft != data.faceLeft) {
-			scale.x *= -1;
-			renderOffset.x -= (danceWidth * scale.x) * (1.0 - anchor.x);
-		}
-		if (parentSin != null && parentCos != null)
-			renderOffset.rotate(parentSin, parentCos);
 	}
 }
