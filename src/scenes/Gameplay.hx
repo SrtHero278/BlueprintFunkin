@@ -2,12 +2,13 @@ package scenes;
 
 import blueprint.graphics.Texture;
 import blueprint.objects.Sprite;
-import math.Vector4;
 import blueprint.objects.AnimatedSprite;
+import blueprint.objects.Group;
 import blueprint.tweening.EaseList;
 import blueprint.Game;
-import blueprint.objects.Group;
 import bindings.Glfw;
+import bindings.CppHelpers;
+import math.Vector4;
 import music.GameSong;
 import objects.*;
 
@@ -19,11 +20,15 @@ class Gameplay extends blueprint.Scene {
     public var strumlines:Array<Strumline> = [];
 
     // HUD Stuff
+    final white:Color = new Color(1.0);
+    final red:Color = new Color(1.0, 0.0, 0.0, 1.0);
+
     public var hud:Group;
     public var leftIcon:HealthIcon;
     public var rightIcon:HealthIcon;
     public var healthBar:CircleBar;
     public var timeBar:CircleBar;
+
     public var scoreNums:Array<AnimatedSprite> = [];
     public var missNums:Array<AnimatedSprite> = [];
     public var accNums:Array<AnimatedSprite> = [];
@@ -32,14 +37,16 @@ class Gameplay extends blueprint.Scene {
     public var rankIcon:Sprite;
     public var accIcon:Sprite;
 
+	var ratingPopup:Sprite;
+	var ratingArrow:Sprite;
+	var ratingTmr:Float = 0.0;
+
     // Background Stuff
     public var stage:Group;
     public var player:Character;
     public var opponent:Character;
     public var spectator:Character;
 
-    final white:Color = new Color(1.0);
-    final red:Color = new Color(1.0, 0.0, 0.0, 1.0);
 
     public function new() {
         super();
@@ -103,6 +110,14 @@ class Gameplay extends blueprint.Scene {
             strumlines[i].characters.push([opponent, player][i]);
         }
 
+		hud.add(ratingArrow = new Sprite(0, 0, Paths.image("game/popup/arrow")));
+		ratingArrow.scale.set(0.0);
+		ratingArrow.dynamicOffset.x = -180.0;
+
+		hud.add(ratingPopup = new Sprite(0, 0));
+		ratingPopup.scale.set(0.7);
+		ratingPopup.tint.a = 0.0;
+
         curSong.time = 0;
         curSong.looping = false;
         curSong.play();
@@ -121,6 +136,14 @@ class Gameplay extends blueprint.Scene {
             str.hitWindow = stats.hitWindow;
         healthBar.percent = MathExtras.lerp(healthBar.percent, stats.health / stats.maxHealth, elapsed * 3);
 		timeBar.percent = Conductor.position / curSong.audio[0].length;
+
+		ratingTmr = MathExtras.lerp(ratingTmr, 0.0, elapsed * 5);
+		ratingArrow.scale.x = ((ratingTmr < 0.0) ? Math.max(ratingTmr, -1.0) : Math.min(ratingTmr, 1.0)) * 0.5;
+		ratingArrow.scale.y = Math.abs(ratingArrow.scale.x);
+		ratingArrow.dynamicOffset.x = MathExtras.lerp(ratingArrow.dynamicOffset.x, -180.0, elapsed * 20);		
+		ratingPopup.scale.x = MathExtras.lerp(ratingPopup.scale.x, 0.7, elapsed * 20);
+		ratingPopup.scale.y = ratingPopup.scale.x;
+		ratingPopup.tint.a = ratingArrow.scale.y * 2.0;
 
         for (num in scoreNums) {
             num.position.y = MathExtras.lerp(num.position.y, 345, elapsed * 9);
@@ -146,10 +169,27 @@ class Gameplay extends blueprint.Scene {
 			object.update(elapsed);
     }
 
+	final diffColors:Array<Vector4> = [
+		new Vector4(255 / 255, 163 / 255, 77 / 255, 1.0),
+		new Vector4(143 / 255, 206 / 255, 252 / 255, 1.0)
+	];
+
     function noteHit(str:Strumline, note:Note) {
         if (str.isCpu) return;
 
         var judge = stats.getJudgement(Math.abs(note.hitTime - Conductor.position));
+        ratingPopup.texture = Texture.getCachedTex(Paths.image("game/popup/" + judge.image));
+        ratingPopup.scale.set(0.8);
+        ratingPopup.tint.a = 1.0;
+
+        ratingArrow.tint = diffColors[CppHelpers.boolToInt(note.hitTime > Conductor.position)];
+        ratingArrow.tint.a = CppHelpers.boolToInt(judge.image != "sick");
+        ratingArrow.scale.x = CppHelpers.boolToInt(note.hitTime > Conductor.position) - 0.5;
+        ratingArrow.dynamicOffset.x = -230;
+
+        ratingTmr = 10.0 * ratingArrow.scale.x;
+        ratingPopup.rotation = Std.random(25) * -ratingArrow.scale.x;
+
         updateNums(Std.string(stats.score), scoreNums, 225 - 640, 35, 335, stats.curRank.color);
 
         var newAcc = Std.string(Math.floor(stats.accuracy * 100));
