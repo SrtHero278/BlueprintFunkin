@@ -12,6 +12,14 @@ import blueprint.sound.SoundPlayer;
 	public var char:Int;
 }
 
+@:structInit class Event {
+	public var time:Float;
+	public var name:String;
+	public var params:Array<Dynamic>;
+
+	@:optional public var func:haxe.Constraints.Function;
+}
+
 class GameSong extends Song {
 	public var path:String;
 	public var diff:String = "idk";
@@ -19,6 +27,7 @@ class GameSong extends Song {
 	public var stage:String = "stage";
 	public var speed:Float = 3.0;
 	public var notes:Array<ChartNote> = [];
+	public var events:Array<Event> = [];
 
 	public function new(path:String, diff:String) {
 		var tmr = Sys.time();
@@ -38,14 +47,20 @@ class GameSong extends Song {
 
 			var curBeat:Float = 0;
 			var curTime:Float = 0;
+			var lastMustHit:Bool = false;
 			for (section in cast (json.notes, Array<Dynamic>)) {
+				if (lastMustHit != section.mustHitSection) {
+					lastMustHit = section.mustHitSection;
+					events.push({time: curTime, name: "Retarget Camera", params: [lastMustHit ? 1 : 0]});
+				}
+
 				for (note in cast(section.sectionNotes, Array<Dynamic>)) {
 					note = cast cast(note, Array<Dynamic>);
 					final data:ChartNote = {
 						time: note[0] * 0.001,
 						lane: Math.floor(note[1] % 4),
 						length: Math.max(note[2], 0.0) * 0.001,
-						char: (note[1] % 8 < 4 != section.mustHitSection) ? 0 : 1
+						char: (note[1] % 8 < 4 != lastMustHit) ? 0 : 1
 					}
 					notes.push(data);
 				}

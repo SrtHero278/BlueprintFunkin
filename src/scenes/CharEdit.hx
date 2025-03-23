@@ -105,6 +105,7 @@ class CharEdit extends blueprint.Scene {
 		CppHelpers.free(data);
 
 		line = new Sprite(0, 767.5 - 360);
+		line.parallax.x = 0;
 		line.sourceRect.setFull(0, 0, 1280, 5);
 		line.texture = pixel;
 		add(line);
@@ -136,15 +137,21 @@ class CharEdit extends blueprint.Scene {
 		add(uiGroup);
 
 		controlData = new Text(1270, 710, Paths.font("montserrat"), 16, controlList[0]);
+		controlData.parallax.set(0, 0);
+		controlData.zoomFactor = 0;
 		controlData.anchor.setFull(1, 1);
 		controlData.alignment = RIGHT;
 		uiGroup.add(controlData);
 
 		controls = new Text(30, 690, Paths.font("montserrat"), 28, "");
+		controls.parallax.set(0, 0);
+		controls.zoomFactor = 0;
 		controls.anchor.setFull(0, 1);
 		uiGroup.add(controls);
 
 		animList = new Text(10, 10, Paths.font("montserrat"), 16, "");
+		animList.parallax.set(0, 0);
+		animList.zoomFactor = 0;
 		animList.anchor.setFull(0, 0);
 		uiGroup.add(animList);
 
@@ -158,13 +165,12 @@ class CharEdit extends blueprint.Scene {
 		super.update(elapsed);
 		if (curMode == Main || curMode == Global) {
 			var camMult = 150 + 500 * (Glfw.getKey(Game.window.cWindow, Glfw.KEY_LEFT_SHIFT) + Glfw.getKey(Game.window.cWindow, Glfw.KEY_RIGHT_SHIFT));
-			position.x += (Glfw.getKey(Game.window.cWindow, Glfw.KEY_J) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_L)) * elapsed * camMult;
-			position.y += (Glfw.getKey(Game.window.cWindow, Glfw.KEY_I) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_K)) * elapsed * camMult;
+			mainCamera.position.x += (Glfw.getKey(Game.window.cWindow, Glfw.KEY_J) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_L)) * elapsed * camMult;
+			mainCamera.position.y += (Glfw.getKey(Game.window.cWindow, Glfw.KEY_I) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_K)) * elapsed * camMult;
 	
-			var newScale = scale.x + (Glfw.getKey(Game.window.cWindow, Glfw.KEY_E) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_Q)) * elapsed;
-			scale.setFull(newScale, newScale);
+			var newScale = mainCamera.zoom.x + (Glfw.getKey(Game.window.cWindow, Glfw.KEY_E) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_Q)) * elapsed;
+			mainCamera.zoom.setFull(newScale, newScale);
 	
-			line.position.x = (640 - position.x) / scale.x;
 			line.scale.x = 1.0 / newScale;
 		}
 	}

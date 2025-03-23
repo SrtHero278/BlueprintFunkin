@@ -1,0 +1,148 @@
+{
+    "zoom": 0.9,
+    "objects": [
+        {
+            "type": "IMAGE",
+            "asset": "SkyWithSun",
+            "position": [-780, -465],
+            "scroll": [0.1, 0.1],
+            "scale": [1, 1],
+            "anchor": [0, 0],
+            "rotation": 0,
+            "antialiasing": true
+        },
+        {
+            "type": "IMAGE",
+            "asset": "Clouds",
+            "position": [-855, -275],
+            "scroll": [0.2, 0.2],
+            "scale": [1, 1],
+            "anchor": [0, 0],
+            "rotation": 0,
+            "antialiasing": true
+        },
+        {
+            "type": "IMAGE",
+            "asset": "island1",
+            "position": [-745, 145],
+            "scroll": [0.5, 0.5],
+            "scale": [1, 1],
+            "anchor": [0, 0],
+            "rotation": 0,
+            "antialiasing": true
+        },
+        {
+            "type": "IMAGE",
+            "asset": "island2",
+            "position": [430, -165],
+            "scroll": [0.5, 0.5],
+            "scale": [1, 1],
+            "anchor": [0, 0],
+            "rotation": 0,
+            "antialiasing": true
+        },
+        {
+            "type": "IMAGE",
+            "asset": "island3",
+            "position": [-745, 445],
+            "scroll": [0.6, 0.6],
+            "scale": [1, 1],
+            "anchor": [0, 0],
+            "rotation": 0,
+            "antialiasing": true
+        },
+        {
+            "type": "IMAGE",
+            "asset": "island4",
+            "position": [105, 245],
+            "scroll": [0.65, 0.65],
+            "scale": [1, 1],
+            "anchor": [0, 0],
+            "rotation": 0,
+            "antialiasing": true
+        },
+        {
+            "type": "IMAGE",
+            "asset": "ocean",
+            "position": [-825, 705],
+            "scroll": [1, 1],
+            "scale": [1, 1],
+            "anchor": [0, 0],
+            "rotation": 0,
+            "antialiasing": true
+        },
+        {
+            "type": "SPARROW",
+            "asset": "Floaties",
+            "position": [-830, 700],
+            "scroll": [1, 1],
+            "scale": [1, 1],
+            "anchor": [0, 0],
+            "rotation": 0,
+            "antialiasing": true,
+            "initialAnim": "Floaties",
+            "animations": [
+                {
+                    "name": "Floaties",
+                    "prefix": "Floaties",
+                    "frameRate": 24,
+                    "looped": true
+                }
+            ]
+        },
+        {
+            "type": "SPARROW",
+            "asset": "back",
+            "position": [-640, 95],
+            "scroll": [1, 1],
+            "scale": [1, 1],
+            "anchor": [0, 0],
+            "rotation": 0,
+            "antialiasing": true,
+            "animations": [
+                {
+                    "name": "back",
+                    "prefix": "back",
+                    "frameRate": 24,
+                    "looped": false
+                }
+            ]
+        },
+        {
+            "type": "OPPONENT",
+            "position": [-680, 195],
+            "camera": [75, 0],
+            "scroll": [1, 1],
+            "scale": [1, 1],
+            "rotation": 0,
+            "faceLeft": false
+        },
+        {
+            "type": "PLAYER",
+            "position": [120, 125],
+            "camera": [-475, 0],
+            "scroll": [1, 1],
+            "scale": [1, 1],
+            "rotation": 0,
+            "faceLeft": false
+        },
+        {
+            "type": "SPARROW",
+            "asset": "front",
+            "position": [-1050, -35],
+            "scroll": [1, 1],
+            "scale": [1, 1],
+            "anchor": [0, 0],
+            "rotation": 0,
+            "antialiasing": true,
+            "animations": [
+                {
+                    "name": "front",
+                    "prefix": "front",
+                    "frameRate": 24,
+                    "looped": false
+                }
+            ]
+        }
+    ]
+}

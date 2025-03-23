@@ -56,17 +56,22 @@ class Character extends blueprint.objects.AnimatedSprite {
 	public var offsets:Map<String, Array<Float>> = [];
 	public var types:Map<String, AnimType> = [];
 	public var chains:Map<String, String> = [];
+
 	public var data:CharJson;
 	public var curChar:String = "";
+
 	public var facingLeft:Bool = false;
 	public var debugMode:Bool = false;
+
 	public var camOffset:Vector2 = new Vector2(0.0, 0.0);
+	public var stageCamKey:String = "none";
+	public var danceWidth:Float = 0;
+	public var danceHeight:Float = 0;
+
 	var curAnimType:AnimType = CAN_DANCE;
 	var holdTimer:Float = 0.0;
-	var danceWidth:Float = 0;
 	var danceAnims:Array<String> = [];
 	var danceStep:Int = -1;
-
 
 	public function new(x:Float, y:Float, char:String = "bf", facingLeft:Bool = false) {
 		var tmr = Sys.time();
@@ -132,6 +137,7 @@ class Character extends blueprint.objects.AnimatedSprite {
 		if (type == DANCING) {
 			danceAnims.push(anim.name);
 			danceWidth = animData[anim.name].width;
+			danceHeight = animData[anim.name].height;
 		} else if (type == CHAIN)
 			chains.set(anim.name, anim.chainAnim);
 	}
@@ -156,12 +162,12 @@ class Character extends blueprint.objects.AnimatedSprite {
 		}
 	}
 
-	override function draw() {
+	override function queueDraw() {
 		var scaleMult = (facingLeft != data.faceLeft) ? -1.0 : 1.0;
 		var posOffset = (facingLeft != data.faceLeft) ? (danceWidth * scale.x) * (1.0 - anchor.x) : 0;
 		scale.x *= scaleMult;
 		positionOffset.x += posOffset;
-		super.draw();
+		super.queueDraw();
 		scale.x *= scaleMult;
 		positionOffset.x -= posOffset;
 	}

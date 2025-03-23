@@ -52,7 +52,7 @@ class Note extends AnimatedSprite {
 		}
 	}
 
-	override function draw() {
+	override function queueDraw() {
 		if (sustain != null) {
 			@:bypassAccessor @:bypassAccessor sustain.memberOf = memberOf;
 			@:bypassAccessor @:bypassAccessor tail.memberOf = memberOf;
@@ -60,13 +60,13 @@ class Note extends AnimatedSprite {
 			sustain.tint.setFull(tint.r, tint.g, tint.b, tint.a * 0.6);
 			sustain.scale.setFull(scale.x, scale.y);
 			sustain.rotation = rotation;
-			sustain.draw();
+			sustain.queueDraw();
 
 			tail.rotation = rotation;
-			tail.draw();
+			tail.queueDraw();
 		}
 		if (!wasHit)
-			super.draw();
+			super.queueDraw();
 	}
 	
 	override function destroy() {

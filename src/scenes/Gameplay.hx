@@ -1,5 +1,6 @@
 package scenes;
 
+import blueprint.objects.Camera;
 import blueprint.graphics.Texture;
 import blueprint.objects.Sprite;
 import blueprint.objects.AnimatedSprite;
@@ -13,10 +14,11 @@ import music.GameSong;
 import objects.*;
 
 class Gameplay extends blueprint.Scene {
-    // Note Stuff
+    // Note and Event Stuff
     public var stats:GameStats;
     public var curSong:GameSong;
-    public var queuedNote:Int;
+    public var queuedNote:Int = 0;
+    public var queuedEvent:Int = 0;
     public var strumlines:Array<Strumline> = [];
 
     // HUD Stuff
@@ -24,6 +26,7 @@ class Gameplay extends blueprint.Scene {
     final red:Color = new Color(1.0, 0.0, 0.0, 1.0);
 
     public var hud:Group;
+    public var hudCamera:Camera;
     public var leftIcon:HealthIcon;
     public var rightIcon:HealthIcon;
     public var healthBar:CircleBar;
@@ -42,7 +45,7 @@ class Gameplay extends blueprint.Scene {
 	var ratingTmr:Float = 0.0;
 
     // Background Stuff
-    public var stage:Group;
+    public var stage:Stage;
     public var player:Character;
     public var opponent:Character;
     public var spectator:Character;
@@ -52,13 +55,17 @@ class Gameplay extends blueprint.Scene {
         super();
         curSong = cast Song.current;
         Conductor.reset(curSong.bpmChanges[0][2]);
+        Conductor.onBeat.add(beatHit);
 
         stats = new GameStats();
 
-        add(stage = new Group(0, -200));
-        stage.add(spectator = new Character(400, 130, curSong.chars[2]));
-        stage.add(opponent = new Character(100, 100, curSong.chars[1]));
-        stage.add(player = new Character(770, 100, curSong.chars[0], true));
+        add(stage = new Stage(curSong.stage));
+        mainCamera.position -= 450;
+        mainCamera.targetLerp = 0.04 * 60;
+        player = new Character(770, 100, curSong.chars[0]);
+        opponent = new Character(100, 100, curSong.chars[1]);
+        spectator = new Character(400, 130, curSong.chars[2]);
+        stage.addChars(player, opponent, spectator);
 
         add(hud = new Group(640, 360));
 		leftIcon = new HealthIcon(85 - 640, 360 - 60, opponent.data.icon);
@@ -117,7 +124,13 @@ class Gameplay extends blueprint.Scene {
 		hud.add(ratingPopup = new Sprite(0, 0));
 		ratingPopup.scale.set(0.7);
 		ratingPopup.tint.a = 0.0;
+        
+        hudCamera = new Camera();
+        hud.cameras = [hudCamera];
 
+        DefaultEvents.game = this;
+        DefaultEvents.interpetEvents(curSong.events);
+        DefaultEvents.retarget(0);
         curSong.time = 0;
         curSong.looping = false;
         curSong.play();
@@ -125,6 +138,8 @@ class Gameplay extends blueprint.Scene {
 
     override function update(elapsed:Float) {
         Conductor.update(elapsed);
+        mainCamera.zoom.set(MathExtras.lerp(mainCamera.zoom.x, stage.defaultZoom, elapsed * 60 * 0.05));
+        hudCamera.zoom.set(MathExtras.lerp(hudCamera.zoom.x, 1, elapsed * 60 * 0.05));
         // strumlines[0].rotation = 15 * Math.sin(Conductor.floatBeat * Math.PI * 0.25);
         // strumlines[1].rotation = -15 * Math.sin(Conductor.floatBeat * Math.PI * 0.25);
 
@@ -165,10 +180,22 @@ class Gameplay extends blueprint.Scene {
             strumlines[data.char].notes.add(note);
             queuedNote++;
         }
+        while (queuedEvent < curSong.events.length && Conductor.position >= curSong.events[queuedEvent].time) {
+            Reflect.callMethod(null, curSong.events[queuedEvent].func, curSong.events[queuedEvent].params);
+            queuedEvent++;
+        }
+        
         for (object in members)
 			object.update(elapsed);
     }
 
+    function beatHit(beat:Int) {
+        if (beat % 4 == 0) {
+            hudCamera.zoom += 0.015;
+            mainCamera.zoom += 0.03;
+        }
+    }
+    
 	final diffColors:Array<Vector4> = [
 		new Vector4(255 / 255, 163 / 255, 77 / 255, 1.0),
 		new Vector4(143 / 255, 206 / 255, 252 / 255, 1.0)

@@ -8,11 +8,11 @@ import blueprint.text.Text.TextAlignment;
 // might modify this later on but this will do.
 // Basically blueprint.objects.Text but with AnimatedSprite stuff.
 class SparrowText extends AnimatedSprite {
-    var lineGap:Float = 70;
-    var defaultAdvance:Float = 40;
+	var lineGap:Float = 70;
+	var defaultAdvance:Float = 40;
 
-    var _queueSize:Bool = true;
-    var _failedChars:Array<String> = [];
+	var _queueSize:Bool = true;
+	var _failedChars:Array<String> = [];
 	var _lineWidths:Array<Float> = [];
 	var _textWidth:Float;
 	var _textHeight:Float;
@@ -20,26 +20,23 @@ class SparrowText extends AnimatedSprite {
 	public var text(default, set):String;
 	public var alignment(default, set):TextAlignment = MIDDLE;
 
-    var _curX:Float = 0;
-    var _curLine:Int = 0;
+	var _curX:Float = 0;
+	var _curLine:Int = 0;
 
-    public function new(x:Float, y:Float, text:String) {
-        super(x, y, Paths.sparrowXml("menus/bold"));
-        this.text = text;
-    }
+	public function new(x:Float, y:Float, text:String) {
+		super(x, y, Paths.sparrowXml("menus/bold"));
+		this.text = text;
+	}
 
-    override public function draw() {
-		if (_queueTrig)
-			updateTrigValues();
+	override public function draw() {
 		if (_queueSize)
 			updateTextSize();
 
 		_curX = 0.0;
 		_curLine = 0;
-        final oldAnimTime = animTime;
-        shader.setUniform("tint", tint);
+		shader.setUniform("tint", tint);
 		for (i in 0...text.length) {
-            var charAt = text.charAt(i);
+			var charAt = text.charAt(i);
 			if (charAt == '\n') {
 				_curLine++;
 				_curX = (_textWidth - _lineWidths[_curLine]) * _lineMult;
@@ -47,13 +44,13 @@ class SparrowText extends AnimatedSprite {
 			}
 
 			final anim = tryAnim(charAt);
-            if (anim.indexes.length > 0) {
-                animTime = oldAnimTime;
-                curAnim = charAt;
-                super.draw();
-                _curX += anim.width;
-            } else
-                _curX += defaultAdvance;
+			if (anim.indexes.length > 0) {
+				curFrame = anim.indexes[Math.floor((animTime % anim.length) * anim.fps)];
+				texture = frames[curFrame].texture;
+				super.draw();
+				_curX += anim.width;
+			} else
+				_curX += defaultAdvance;
 		}
 	}
 	override function prepareShaderVars() {
@@ -68,17 +65,17 @@ class SparrowText extends AnimatedSprite {
 
 		shader.transform.reset(1.0);
 		shader.transform.translate(Sprite._refVec3.set(
-            (_curX + dynamicOffset.x + frame.offsetX + (sourceWidth * 0.5) - (_textWidth * 0.5)) / sourceWidth,
-            (lineGap * _curLine + dynamicOffset.y + frame.offsetY + (lineGap - sourceHeight) + (sourceHeight * 0.5) - (_textHeight * 0.5)) / sourceHeight,
-            0
-        ));
+			(_curX + dynamicOffset.x + frame.offsetX + (sourceWidth * 0.5) - (_textWidth * 0.5)) / sourceWidth,
+			(lineGap * _curLine + dynamicOffset.y + frame.offsetY + (lineGap - sourceHeight) + (sourceHeight * 0.5) - (_textHeight * 0.5)) / sourceHeight,
+			0
+		));
 		shader.transform.scale(Sprite._refVec3.set(width, height, 1));
-		if (rotation != 0)
+		if (_sinMult != 0)
 			shader.transform.rotate(_sinMult, _cosMult, Sprite._refVec3.set(0, 0, 1));
 		shader.transform.translate(Sprite._refVec3.set(
-            position.x + renderOffset.x,
-            position.y + renderOffset.y,
-            0
+			position.x + renderOffset.x,
+			position.y + renderOffset.y,
+			0
 		));
 		shader.setUniform("transform", shader.transform);
 
@@ -90,7 +87,7 @@ class SparrowText extends AnimatedSprite {
 		);
 	}
 
-    override function calcRenderOffset(?parentScale:Vector2, ?parentSin:Float, ?parentCos:Float) {
+	override function calcRenderOffset(?parentScale:Vector2, ?parentSin:Float, ?parentCos:Float) {
 		renderOffset.copyFrom(positionOffset);
 		if (parentScale != null)
 			renderOffset.multiplyEq(parentScale);
@@ -98,17 +95,17 @@ class SparrowText extends AnimatedSprite {
 		renderOffset.y += (_textHeight * scale.y) * (0.5 - anchor.y);
 		if (parentSin != null && parentSin != null)
 			renderOffset.rotate(parentSin, parentCos);
-    }
+	}
 
-    function updateTextSize() {
-        _queueSize = false;
-        _lineWidths.splice(0, _lineWidths.length);
-        _textWidth = 0.0;
-        _textHeight = lineGap;
-        _curX = 0.0;
+	function updateTextSize() {
+		_queueSize = false;
+		_lineWidths.splice(0, _lineWidths.length);
+		_textWidth = 0.0;
+		_textHeight = lineGap;
+		_curX = 0.0;
 
 		for (i in 0...text.length) {
-            var charAt = text.charAt(i);
+			var charAt = text.charAt(i);
 			if (charAt == '\n') {
 				_lineWidths.push(_curX);
 				_textHeight += lineGap;
@@ -121,28 +118,28 @@ class SparrowText extends AnimatedSprite {
 			_textWidth = Math.max(_curX, _textWidth);
 		}
 		_lineWidths.push(_curX);
-    }
-    function tryAnim(char:String) {
-        if (!animData.exists(char))
-            addPrefixAnim(char, char + "0", 24, true);
-        return animData.get(char);
-    }
+	}
+	function tryAnim(char:String) {
+		if (!animData.exists(char))
+			addPrefixAnim(char, char + "0", 24, true);
+		return animData.get(char);
+	}
 
-    override function get_sourceWidth():Float {
-        if (_queueSize)
-            updateTextSize();
-        return _textWidth;
-    }
-    override function get_sourceHeight():Float {
-        if (_queueSize)
-            updateTextSize();
-        return _textHeight;
-    }
+	override function get_sourceWidth():Float {
+		if (_queueSize)
+			updateTextSize();
+		return _textWidth;
+	}
+	override function get_sourceHeight():Float {
+		if (_queueSize)
+			updateTextSize();
+		return _textHeight;
+	}
 
-    function set_text(newText:String) {
-        _queueSize = _queueSize || (text != newText);
-        return text = newText;
-    }
+	function set_text(newText:String) {
+		_queueSize = _queueSize || (text != newText);
+		return text = newText;
+	}
 
 	function set_alignment(newAlign:TextAlignment) {
 		switch (newAlign) {
