@@ -10,14 +10,17 @@ class Song {
 	public static var current:Song;
 
 	public var time(get, set):Float;
-	public var looping(get, set):Bool;
+	public var looping:Bool;
 	public var name:String = "idk";
 	public var bpmChanges:Array<Array<Float>> = [];
 	public var audio:Array<SoundPlayer> = [];
+	public var complete(get, never):Bool;
+	public var finished:Signal<Song->Void>;
 
 	public function new(name:String, bpms:Array<Array<Float>>) {
 		this.name = name;
 		this.bpmChanges = bpms;
+		this.finished = new Signal();
 	}
 
 	function get_time():Float {
@@ -29,18 +32,17 @@ class Song {
 		return get_time();
 	}
 
-	function get_looping():Bool {
-		return (audio.length > 0) ? audio[0].looping : false;
-	}
-	function set_looping(to:Bool):Bool {
-		for (sound in audio)
-			sound.looping = to;
-		return get_looping();
+	function get_complete() {
+		for (sound in audio) {
+			if (!sound.complete)
+				return false;
+		}
+		return true;
 	}
 
-	public function play() {
+	public function play(?atTime:Float) {
 		for (sound in audio)
-			sound.play();
+			sound.play(atTime);
 	}
 
 	public function pause() {

@@ -1,5 +1,6 @@
 package scenes;
 
+import blueprint.text.Text;
 import blueprint.objects.Camera;
 import blueprint.graphics.Texture;
 import blueprint.objects.Sprite;
@@ -25,6 +26,10 @@ class Gameplay extends blueprint.Scene {
     final white:Color = new Color(1.0);
     final red:Color = new Color(1.0, 0.0, 0.0, 1.0);
 
+    public var fps:Text;
+    public var countedFrames:Int = 0;
+    public var untilFpsRegister:Float = 1;
+
     public var hud:Group;
     public var hudCamera:Camera;
     public var leftIcon:HealthIcon;
@@ -40,9 +45,7 @@ class Gameplay extends blueprint.Scene {
     public var rankIcon:Sprite;
     public var accIcon:Sprite;
 
-	var ratingPopup:Sprite;
-	var ratingArrow:Sprite;
-	var ratingTmr:Float = 0.0;
+    public var rating:RatingPopup;
 
     // Background Stuff
     public var stage:Stage;
@@ -62,6 +65,7 @@ class Gameplay extends blueprint.Scene {
         add(stage = new Stage(curSong.stage));
         mainCamera.position -= 450;
         mainCamera.targetLerp = 0.04 * 60;
+        mainCamera.zoom.set(stage.defaultZoom);
         player = new Character(770, 100, curSong.chars[0]);
         opponent = new Character(100, 100, curSong.chars[1]);
         spectator = new Character(400, 130, curSong.chars[2]);
@@ -110,21 +114,18 @@ class Gameplay extends blueprint.Scene {
         strumlines.push(new Strumline(0.25, curSong.speed));
         strumlines[1].hit.add(noteHit);
         strumlines[1].missed.add(noteMissed);
-        strumlines[1].keybinds = [[Glfw.KEY_A], [Glfw.KEY_S], [Glfw.KEY_KP_5], [Glfw.KEY_KP_6]];
+        strumlines[1].keybinds = [[Glfw.KEY_A], [Glfw.KEY_S], [Glfw.KEY_K], [Glfw.KEY_L]];
 
         for(i in 0...strumlines.length) {
             hud.add(strumlines[i]);
             strumlines[i].characters.push([opponent, player][i]);
         }
 
-		hud.add(ratingArrow = new Sprite(0, 0, Paths.image("game/popup/arrow")));
-		ratingArrow.scale.set(0.0);
-		ratingArrow.dynamicOffset.x = -180.0;
-
-		hud.add(ratingPopup = new Sprite(0, 0));
-		ratingPopup.scale.set(0.7);
-		ratingPopup.tint.a = 0.0;
+		hud.add(rating = new RatingPopup());
         
+        hud.add(fps = new Text(0, -150, Paths.font("montserrat"), 24, "? FPS"));
+        fps.tint.setFull(0, 0, 0, 1);
+
         hudCamera = new Camera();
         hud.cameras = [hudCamera];
 
@@ -134,9 +135,18 @@ class Gameplay extends blueprint.Scene {
         curSong.time = 0;
         curSong.looping = false;
         curSong.play();
+        curSong.finished.add(songFinished);
     }
 
     override function update(elapsed:Float) {
+        ++countedFrames;
+        untilFpsRegister -= elapsed;
+        if (untilFpsRegister <= 0.0) {
+            untilFpsRegister = 1.0;
+            fps.text = countedFrames + " FPS";
+            countedFrames = 0;
+        }
+
         Conductor.update(elapsed);
         mainCamera.zoom.set(MathExtras.lerp(mainCamera.zoom.x, stage.defaultZoom, elapsed * 60 * 0.05));
         hudCamera.zoom.set(MathExtras.lerp(hudCamera.zoom.x, 1, elapsed * 60 * 0.05));
@@ -151,14 +161,6 @@ class Gameplay extends blueprint.Scene {
             str.hitWindow = stats.hitWindow;
         healthBar.percent = MathExtras.lerp(healthBar.percent, stats.health / stats.maxHealth, elapsed * 3);
 		timeBar.percent = Conductor.position / curSong.audio[0].length;
-
-		ratingTmr = MathExtras.lerp(ratingTmr, 0.0, elapsed * 5);
-		ratingArrow.scale.x = ((ratingTmr < 0.0) ? Math.max(ratingTmr, -1.0) : Math.min(ratingTmr, 1.0)) * 0.5;
-		ratingArrow.scale.y = Math.abs(ratingArrow.scale.x);
-		ratingArrow.dynamicOffset.x = MathExtras.lerp(ratingArrow.dynamicOffset.x, -180.0, elapsed * 20);		
-		ratingPopup.scale.x = MathExtras.lerp(ratingPopup.scale.x, 0.7, elapsed * 20);
-		ratingPopup.scale.y = ratingPopup.scale.x;
-		ratingPopup.tint.a = ratingArrow.scale.y * 2.0;
 
         for (num in scoreNums) {
             num.position.y = MathExtras.lerp(num.position.y, 345, elapsed * 9);
@@ -189,33 +191,23 @@ class Gameplay extends blueprint.Scene {
 			object.update(elapsed);
     }
 
+    function songFinished(song:Song) {
+        Game.changeSceneTo(scenes.Title);
+    }
+
     function beatHit(beat:Int) {
         if (beat % 4 == 0) {
             hudCamera.zoom += 0.015;
             mainCamera.zoom += 0.03;
         }
     }
-    
-	final diffColors:Array<Vector4> = [
-		new Vector4(255 / 255, 163 / 255, 77 / 255, 1.0),
-		new Vector4(143 / 255, 206 / 255, 252 / 255, 1.0)
-	];
 
     function noteHit(str:Strumline, note:Note) {
         if (str.isCpu) return;
 
+        ++stats.combo;
         var judge = stats.getJudgement(Math.abs(note.hitTime - Conductor.position));
-        ratingPopup.texture = Texture.getCachedTex(Paths.image("game/popup/" + judge.image));
-        ratingPopup.scale.set(0.8);
-        ratingPopup.tint.a = 1.0;
-
-        ratingArrow.tint = diffColors[CppHelpers.boolToInt(note.hitTime > Conductor.position)];
-        ratingArrow.tint.a = CppHelpers.boolToInt(judge.image != "sick");
-        ratingArrow.scale.x = CppHelpers.boolToInt(note.hitTime > Conductor.position) - 0.5;
-        ratingArrow.dynamicOffset.x = -230;
-
-        ratingTmr = 10.0 * ratingArrow.scale.x;
-        ratingPopup.rotation = Std.random(25) * -ratingArrow.scale.x;
+        rating.popup(judge, note.hitTime > Conductor.position, stats.combo);
 
         updateNums(Std.string(stats.score), scoreNums, 225 - 640, 35, 335, stats.curRank.color);
 
@@ -235,6 +227,7 @@ class Gameplay extends blueprint.Scene {
     function noteMissed(str:Strumline, note:Note) {
         if (str.isCpu) return;
 
+        stats.combo = 0;
         stats.addMiss();
         updateNums(Std.string(stats.score), scoreNums, 225 - 640, 35, 335, red);
         updateNums(Std.string(stats.misses), missNums, 640 - 225 + 35, -35, 290, red);
@@ -294,6 +287,8 @@ class Gameplay extends blueprint.Scene {
         }
 
         switch (keyCode) {
+            case Glfw.KEY_F5:
+                Game.changeSceneTo(scenes.Gameplay);
             case Glfw.KEY_ESCAPE:
                 Game.changeSceneTo(scenes.Title);
         }

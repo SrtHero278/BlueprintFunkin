@@ -33,12 +33,19 @@ class Title extends BaseMenu {
     public function new() {
         super();
         options = [{
-            image: Texture.getCachedTex(Paths.image("menus/play")),
+            image: Texture.getCachedTex(Paths.image("menus/titleOpts/play")),
             onSelect: function() {
                 subMenu = new SongList();
                 add(subMenu);
             },
             trySelect: SongList.trySelect
+        }, {
+            image: Texture.getCachedTex(Paths.image("menus/titleOpts/mods")),
+            onSelect: function() {
+                subMenu = new ModsList();
+                add(subMenu);
+            },
+            trySelect: ModsList.trySelect
         }];
 
         Song.setCurrentAsBasic("menus/music", "Freaky Menu", 102);

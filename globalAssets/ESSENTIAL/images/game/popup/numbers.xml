@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Created with Free texture packer v0.6.7 http://free-tex-packer.com
+-->
+<TextureAtlas imagePath="numbers.png" width="950" height="115">
+  <SubTexture name="num0" x="2" y="2"  width="91" height="111"/>
+  <SubTexture name="num1" x="97" y="2"  width="91" height="111"/>
+  <SubTexture name="num2" x="192" y="2"  width="91" height="111"/>
+  <SubTexture name="num3" x="287" y="2"  width="91" height="111"/>
+  <SubTexture name="num4" x="382" y="2"  width="91" height="111"/>
+  <SubTexture name="num5" x="477" y="2"  width="91" height="111"/>
+  <SubTexture name="num6" x="572" y="2"  width="91" height="111"/>
+  <SubTexture name="num7" x="667" y="2"  width="91" height="111"/>
+  <SubTexture name="num8" x="762" y="2"  width="91" height="111"/>
+  <SubTexture name="num9" x="857" y="2"  width="91" height="111"/>
+</TextureAtlas>

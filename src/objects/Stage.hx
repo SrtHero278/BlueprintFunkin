@@ -10,6 +10,7 @@ import sys.io.File;
 import haxe.Json;
 
 typedef StageObject = {
+	var ?name:String;
 	var type:String;
 	var asset:String;
 	var position:Array<Float>;
@@ -39,6 +40,7 @@ class Stage extends Group {
 	public var charGroups:Map<String, Group> = [];
 	public var camOffsets:Map<String, Vector2> = [];
 	public var facingLeft:Map<String, Bool> = [];
+	public var objects:Map<String, Sprite> = [];
 	var jsonData:StageJSON;
 
 	function getDefaultArray<T>(array:Array<T>, idx:Int, def:T) {
@@ -61,6 +63,9 @@ class Stage extends Group {
 	}
 
 	function setupObject(spr:Sprite, obj:StageObject) {
+		if (obj.name != null)
+			objects.set(obj.name, spr);
+
 		final scaleX = getDefaultArray(obj.scale, 0, 1);
 		spr.scale.set(scaleX, getDefaultArray(obj.scale, 1, scaleX));
 		spr.rotation = (obj.rotation != null) ? obj.rotation : 0;

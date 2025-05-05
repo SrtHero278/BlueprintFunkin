@@ -32,6 +32,8 @@ class GameStats {
 		{image: "shit",	window: 0.160,	score: -15,	accuracy: 0.15,	hpGain: -0.01}
 	];
 
+	public var combo:Int = 0;
+
 	public var curRank:Ranking;
 	public var score:Int = 0;
 	public var misses:Int = 0;

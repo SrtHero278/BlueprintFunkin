@@ -78,8 +78,6 @@ class SongList extends BaseMenu {
         icons[curItem].tint.a = 1;
         text[curItem].tint.a = 1;
 
-        sound = new SoundPlayer(Paths.audio("menus/scroll"), false, false, 1.0);
-
         curSubItem = Math.floor(songs[curItem].diffs.length * 0.5);
         curDiff = songs[curItem].diffs[curSubItem];
         setSong(!Std.isOfType(Song.current, music.GameSong) || cast(Song.current, music.GameSong).path != songs[curItem].internalName);
@@ -128,6 +126,7 @@ class SongList extends BaseMenu {
         openTwn.deleteWhenDone = true;
         openTwn.finished.add((twn) -> {
             memberOf.remove(this);
+            sound.destroy();
             destroy();
         });
     }

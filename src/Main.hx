@@ -1,6 +1,8 @@
 package;
 
+import sys.FileSystem;
 import scenes.Title;
+import scenes.ModsList;
 import bindings.CppHelpers;
 import blueprint.Game;
 
@@ -8,6 +10,8 @@ class Main {
 	public static var game:Game;
 	
 	static function main() {
+		ModsList.trySelect();
+		Paths.foldersToCheck[0] = "assets/" + ModsList.mods[0];
 		game = new Game(1280, 720, "Blueprint Funkin", Title);
 	}
 }

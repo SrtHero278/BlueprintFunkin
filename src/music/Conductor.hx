@@ -35,6 +35,13 @@ class Conductor {
 
     public static function update(elapsed:Float) {
         if (Song.current != null && Song.current.audio.length > 0) {
+            if (Song.current.complete) {
+                if (Song.current.looping)
+                    Song.current.play(0.0);
+                else 
+                    Song.current.finished.emit();
+            }
+
             var lastTime = position;
             var bpms = Song.current.bpmChanges;
             position = Song.current.time;

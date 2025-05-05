@@ -2,6 +2,7 @@ package scenes;
 
 // Behond! (yes behond) The messiest editor code you'll ever see!
 
+import objects.HealthIcon;
 import sys.FileSystem;
 import blueprint.Game;
 import blueprint.input.InputHandler;
@@ -38,7 +39,7 @@ final controlList = [
 
 "[W/S] - Change Anim
 (Hold [SHIFT] to reorder!)
-[+] - New/Edit Anim
+[+/ENTER] - New/Edit Anim
 [-] - Delete Anim
 [.] - Edit Indices
 [ARROW-KEYS] - Move Animation Offset
@@ -82,6 +83,7 @@ class CharEdit extends blueprint.Scene {
 
 	var dirArrow:Sprite;
 	var line:Sprite;
+	var icon:HealthIcon;
 	var char:Character;
 	var anims:Array<String> = [];
 	var animIndex(default, set):Int = 0;
@@ -206,9 +208,11 @@ class CharEdit extends blueprint.Scene {
 	}
 
 	function updateAnimText() {
-		animList.text = "";
+		var txt = "";
 		for (i in 0...anims.length)
-			animList.text += (i == animIndex ? ">>> " : "") + anims[i] + ": " + char.data.animations[i].offsets + "\n";
+			txt += (i == animIndex ? ">>> " : "") + anims[i] + ": " + char.data.animations[i].offsets + "\n";
+		txt += '\nGlobal Offset: ${char.positionOffset}\nCamera Offset: ${char.camOffset}\nAntialiasing: ${char.antialiasing}\nScale: ${char.scale.x}';
+		animList.text = txt;
 	}
 
 	function charPress(char:String, code:cpp.UInt32, mods:Int) {
@@ -236,6 +240,8 @@ class CharEdit extends blueprint.Scene {
 				switch(keyCode) {
 					case Glfw.KEY_M:
 						curMode = Global;
+					case Glfw.KEY_ESCAPE:
+						Game.changeSceneTo(Title);
 
 					case Glfw.KEY_W:
 						if (anims.length <= 0) return;
@@ -302,7 +308,7 @@ class CharEdit extends blueprint.Scene {
 							frameCount += CppHelpers.boolToInt(frame.name.startsWith(animData.prefix));
 						}
 						curMode = Indices(frameCount, indices, 0, 0);
-					case Glfw.KEY_KP_ADD | Glfw.KEY_EQUAL:
+					case Glfw.KEY_KP_ADD | Glfw.KEY_EQUAL | Glfw.KEY_ENTER | Glfw.KEY_KP_ENTER:
 						var lines = ["Anim Name: ", "Interal Name: ", "Frame Rate: ", "Looped: ", "Anim Type: "];
 						var kinds = [Normal, Normal, Number(24), Bool, List(["DANCE_AFTER", "CAN_DANCE", "DANCING", "SINGING", "CHAIN"])];
 						curMode = Type(["", "", "24", "False", "DANCE_AFTER"], lines, 0, finishAnim, updateAnim, kinds);
@@ -325,15 +331,19 @@ class CharEdit extends blueprint.Scene {
 				switch (keyCode) {
 					case Glfw.KEY_M:
 						curMode = Main;
+					case Glfw.KEY_ESCAPE:
+						Game.changeSceneTo(Title);
 
 					case Glfw.KEY_A | Glfw.KEY_D:
 						var inc:Float = (CppHelpers.boolToInt(keyCode == Glfw.KEY_D) - CppHelpers.boolToInt(keyCode == Glfw.KEY_A));
 						inc *= 1 + 9 * (mods & Glfw.MOD_SHIFT);
 						char.positionOffset.x += inc;
 						char.data.offsets.x = char.positionOffset.x;
+						updateAnimText();
 					case Glfw.KEY_W:
 						char.positionOffset.y -= 1 + 9 * (mods & Glfw.MOD_SHIFT);
 						char.data.offsets.y = char.positionOffset.y;
+						updateAnimText();
 					case Glfw.KEY_S:
 						if (mods & Glfw.MOD_CONTROL != 0) {
 							var lines = ["Save as: "];
@@ -343,24 +353,32 @@ class CharEdit extends blueprint.Scene {
 						}
 						char.positionOffset.y += 1 + 9 * (mods & Glfw.MOD_SHIFT);
 						char.data.offsets.y = char.positionOffset.y;
+						updateAnimText();
 
 					case Glfw.KEY_LEFT | Glfw.KEY_RIGHT:
 						var inc:Float = (CppHelpers.boolToInt(keyCode == Glfw.KEY_RIGHT) - CppHelpers.boolToInt(keyCode == Glfw.KEY_LEFT));
 						inc *= 1 + 9 * (mods & Glfw.MOD_SHIFT);
 						char.camOffset.x += inc;
+						char.data.offsets.camX = char.camOffset.x;
+						updateAnimText();
 					case Glfw.KEY_UP | Glfw.KEY_DOWN:
 						var inc:Float = (CppHelpers.boolToInt(keyCode == Glfw.KEY_DOWN) - CppHelpers.boolToInt(keyCode == Glfw.KEY_UP));
 						inc *= 1 + 9 * (mods & Glfw.MOD_SHIFT);
 						char.camOffset.y += inc;
+						char.data.offsets.camY = char.camOffset.y;
+						updateAnimText();
 
 					case Glfw.KEY_COMMA | Glfw.KEY_PERIOD:
 						char.scale += 0.1 * (CppHelpers.boolToInt(keyCode == Glfw.KEY_PERIOD) - CppHelpers.boolToInt(keyCode == Glfw.KEY_COMMA));
+						char.data.scale = char.scale.x;
+						updateAnimText();
 
 					case Glfw.KEY_SLASH | Glfw.KEY_KP_DIVIDE:
 						char.data.faceLeft = char.facingLeft = !char.facingLeft;
 						updateDirArrow();
 					case Glfw.KEY_1 | Glfw.KEY_KP_1:
 						char.antialiasing = char.data.antialiasing = !char.antialiasing;
+						updateAnimText();
 					case Glfw.KEY_0 | Glfw.KEY_KP_0:
 						var lines = ["Spritesheet: ", "Icon: "];
 						curMode = Type(["", ""], lines, 0, finishTexture);
