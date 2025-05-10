@@ -91,6 +91,9 @@ class OptionList extends BaseMenu {
 	}
 
 	override function cancel() {
+		self = null;
+		Settings.save("tempOptions.json");
+
 		var title:scenes.Title = cast memberOf;
 		title.subMenu = null;
 		title.acceptTwn.rewind();
@@ -98,7 +101,6 @@ class OptionList extends BaseMenu {
 		memberOf.remove(this);
 		sound.destroy();
 		destroy();
-		self = null;
 	}
 
 	override function getMaxItems():Int {

@@ -32,6 +32,8 @@ class Title extends BaseMenu {
 
     public function new() {
         super();
+        Settings.load("tempOptions.json");
+
         options = [{
             image: Texture.getCachedTex(Paths.image("menus/titleOpts/play")),
             onSelect: function() {
@@ -53,7 +55,6 @@ class Title extends BaseMenu {
             },
             trySelect: ModsList.trySelect
         }];
-        trace(options[1].image.keepOnce);
 
         Song.setCurrentAsBasic("menus/music", "Freaky Menu", 102);
         Song.current.looping = true;

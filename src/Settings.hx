@@ -1,5 +1,8 @@
 package;
 
+import sys.io.File;
+import sys.FileSystem;
+import haxe.Json;
 import bindings.Glfw;
 import blueprint.Game;
 
@@ -22,4 +25,24 @@ class SettingData {
 	}
 
 	public function new() {}
+
+	public function load(path:String) {
+		try {
+			if (!FileSystem.exists(path))
+				throw "File nonexistant.";
+			final json = Json.parse(File.getContent(path));
+			
+			for (field in Reflect.fields(json)) {
+				if (Reflect.field(this, field) != null) 
+					Reflect.setProperty(this, field, Reflect.field(json, field));
+			}
+		} catch (err) {
+			Sys.println('Failed to load save "$path": ${err.details()}');
+		}
+	}
+
+	// honestly dunno why i did this i think it was just to have a save with the load.
+	public function save(path:String) {
+		File.saveContent(path, Json.stringify(this, null, "\t"));
+	}
 }
