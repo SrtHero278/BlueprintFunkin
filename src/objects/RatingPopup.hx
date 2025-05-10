@@ -20,24 +20,28 @@ class RatingPopup extends Group {
 		new Vector4(143 / 255, 206 / 255, 252 / 255, 1.0)
 	];
 
-    public function popup(judge:Judgement, late:Bool, combo:Int) {
+    public function popup(judge:Judgement, stats:GameStats, diff:Float) {
+        final highest = judge == stats.judgements[0];
+
         ratingPopup.texture = Texture.getCachedTex(Paths.image("game/popup/" + judge.image));
         ratingPopup.scale.set(0.8);
         ratingPopup.tint.a = 1.0;
+        ratingPopup.visible = !highest || !Settings.hideHighJudge;
 
-        ratingArrow.tint = diffColors[CppHelpers.boolToInt(late)];
-        ratingArrow.visible = judge.image != "sick";
-        ratingArrow.scale.x = CppHelpers.boolToInt(late) - 0.5;
+        ratingArrow.tint = diffColors[CppHelpers.boolToInt(diff > 0)];
+        ratingArrow.visible = !highest;
+        ratingArrow.scale.x = CppHelpers.boolToInt(diff > 0) - 0.5;
         ratingArrow.dynamicOffset.x = -230;
 
         ratingTmr = 10.0 * ratingArrow.scale.x;
         ratingPopup.rotation = Std.random(25) * -ratingArrow.scale.x;
 
-        var comboStr = Std.string(combo);
+        var comboStr = Std.string(stats.combo);
         while (nums.members.length < comboStr.length) {
             var num = new AnimatedSprite(0, -55);
             @:privateAccess {
-                num.frames = templateNum.frames;
+                for (set in templateNum.frameSets)
+                    num.pushFrameSet(set);
                 num.animData = templateNum.animData;
             }
             nums.add(num);
@@ -86,6 +90,6 @@ class RatingPopup extends Group {
 		ratingPopup.tint.a = ratingArrow.scale.y * 2.0;
 
         nums.tint.a = (ratingArrow.scale.y + 0.5);
-        nums.scale.x = nums.scale.y = ratingPopup.scale.x * nums.tint.a;
+        nums.scale.x = nums.scale.y = (ratingPopup.scale.x * nums.tint.a) * 0.85;
     }
 }

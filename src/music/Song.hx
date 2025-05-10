@@ -10,7 +10,7 @@ class Song {
 	public static var current:Song;
 
 	public var time(get, set):Float;
-	public var looping:Bool;
+	public var looping:Bool = false;
 	public var name:String = "idk";
 	public var bpmChanges:Array<Array<Float>> = [];
 	public var audio:Array<SoundPlayer> = [];
@@ -24,7 +24,10 @@ class Song {
 	}
 
 	function get_time():Float {
-		return (audio.length > 0) ? audio[0].time : 0;
+		var curTime:Float = 0;
+		for (sound in audio)
+			curTime = Math.max(curTime, sound.time);
+		return curTime;
 	}
 	function set_time(to:Float):Float {
 		for (sound in audio)
@@ -55,6 +58,21 @@ class Song {
 			sound.destroy();
 	}
 
+	function soundFinished(sound:SoundPlayer) {
+		if (!complete) return;
+
+		if (looping)
+			play(0.0);
+		else
+			finished.emit(this);
+	}
+
+	// for some setup while pushing
+	function pushSound(sound:SoundPlayer) {
+		audio.push(sound);
+		sound.finished.add(soundFinished);
+	}
+
 	function loadAudio(path:String) {
 		if (FileSystem.exists(path)) {
 			var tmr = Sys.time();
@@ -62,7 +80,7 @@ class Song {
 			sound.gain = 0.25;
 			sound.keepOnSwitch = true;
 			@:privateAccess if (sound.data != null)
-				audio.push(sound);
+				pushSound(sound);
 			else
 				sound.destroy();
 

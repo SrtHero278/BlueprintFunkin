@@ -83,6 +83,11 @@ class Character extends blueprint.objects.AnimatedSprite {
 		Sys.println('Loaded Character for $curChar (${Math.round((Sys.time() - tmr) * 1000) * 0.001} s)');
 	}
 
+	override function destroy() {
+		music.Conductor.onBeat.remove(dance);
+		super.destroy();
+	}
+
 	public function loadCharacter(charName:String) {
 		if (curChar == charName) return; //No need to load if they're already loaded.
 

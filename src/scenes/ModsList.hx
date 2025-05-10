@@ -32,7 +32,7 @@ class ModsList extends BaseMenu {
         sound = new SoundPlayer(Paths.audio("menus/scroll"), false, false, 1.0);
     }
 
-    override function changeItem() {
+    override function changeItem(direction:Int) {
         sound.play(0.0);
         list.text = "";
         for (i => mod in mods)

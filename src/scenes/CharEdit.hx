@@ -304,8 +304,9 @@ class CharEdit extends blueprint.Scene {
 						var frameCount:Int = 0;
 						var animData = char.data.animations[animIndex];
 						var indices = (animData.frameIndices == null ? [] : animData.frameIndices.copy());
-						@:privateAccess for (frame in char.frames) {
-							frameCount += CppHelpers.boolToInt(frame.name.startsWith(animData.prefix));
+						@:privateAccess for (set in char.frameSets) {
+							for (frame in set.frames)
+								frameCount += CppHelpers.boolToInt(frame.name.startsWith(animData.prefix));
 						}
 						curMode = Indices(frameCount, indices, 0, 0);
 					case Glfw.KEY_KP_ADD | Glfw.KEY_EQUAL | Glfw.KEY_ENTER | Glfw.KEY_KP_ENTER:

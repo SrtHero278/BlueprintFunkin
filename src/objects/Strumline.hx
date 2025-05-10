@@ -17,6 +17,7 @@ class Strumline extends Group {
 	public var strums:Group;
 	public var notes:Group;
 	public var speed:Float = 3.2;
+	public var scrollMult(default, set):Float = 1;
 
 	public function new(xFactor:Float, speed:Float) {
 		super(blueprint.Game.window.width * xFactor, 0);
@@ -42,6 +43,9 @@ class Strumline extends Group {
 			});
 			strums.add(strum);
 		}
+
+		if (Settings.downscroll)
+			scrollMult *= -1;
 	}
 
 	override function update(elapsed:Float) {
@@ -89,7 +93,7 @@ class Strumline extends Group {
 	
 			final distance = speed * 450 * (note.hitTime - Conductor.position);
 			note.position.x = strum.position.x;
-			note.position.y = strum.position.y + distance;
+			note.position.y = strum.position.y + distance * scrollMult;
 		}
 	}
 
@@ -156,5 +160,14 @@ class Strumline extends Group {
 
 	function get_isCpu():Bool {
 		return keybinds.length != strums.members.length;
+	}
+
+	function set_scrollMult(newMult:Float) {
+		strums.position.y = notes.position.y = -255 * newMult;
+		for (spr in notes.members) {
+			final note:Note = cast spr;
+			note.holdScale = newMult;
+		}
+		return scrollMult = newMult;
 	}
 }

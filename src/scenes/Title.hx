@@ -18,7 +18,7 @@ import bindings.Glfw;
 @:structInit class TitleOpt {
     public var image:Texture;
     public var onSelect:Void->Void;
-    public var trySelect:Null<Void->Bool>;
+    @:optional public var trySelect:Null<Void->Bool>;
 }
 
 class Title extends BaseMenu {
@@ -40,6 +40,12 @@ class Title extends BaseMenu {
             },
             trySelect: SongList.trySelect
         }, {
+            image: Texture.getCachedTex(Paths.image("menus/titleOpts/options")),
+            onSelect: function() {
+                subMenu = new OptionList();
+                add(subMenu);
+            }
+        }, {
             image: Texture.getCachedTex(Paths.image("menus/titleOpts/mods")),
             onSelect: function() {
                 subMenu = new ModsList();
@@ -47,6 +53,7 @@ class Title extends BaseMenu {
             },
             trySelect: ModsList.trySelect
         }];
+        trace(options[1].image.keepOnce);
 
         Song.setCurrentAsBasic("menus/music", "Freaky Menu", 102);
         Song.current.looping = true;
@@ -110,7 +117,7 @@ class Title extends BaseMenu {
             super.keyDown(keyCode, scanCode, mods);
     }
 
-    override function changeItem() {
+    override function changeItem(direction:Int) {
         optSprite.texture = options[curItem].image;
         leftArrow.position.x = 640 - optSprite.width * 0.5 - 25;
         rightArrow.position.x = 640 + optSprite.width * 0.5 + 25;

@@ -46,7 +46,7 @@ class SparrowText extends AnimatedSprite {
 			final anim = tryAnim(charAt);
 			if (anim.indexes.length > 0) {
 				curFrame = anim.indexes[Math.floor((animTime % anim.length) * anim.fps)];
-				texture = frames[curFrame].texture;
+				texture = getFrame(curFrame).texture;
 				super.draw();
 				_curX += anim.width;
 			} else
@@ -54,7 +54,6 @@ class SparrowText extends AnimatedSprite {
 		}
 	}
 	override function prepareShaderVars() {
-		final frame = (frames == null || frames.length <= 0) ? AnimatedSprite.backupFrame : frames[curFrame];
 		final uMult = bindings.CppHelpers.boolToInt(flipX);
 		final vMult = bindings.CppHelpers.boolToInt(flipY);
 

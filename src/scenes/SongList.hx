@@ -2,10 +2,10 @@ package scenes;
 
 import blueprint.Game;
 import blueprint.tweening.EaseList;
-import blueprint.text.Text;
 import blueprint.tweening.PropertyTween;
-import blueprint.objects.AnimatedSprite;
+import blueprint.graphics.SpriteFrames;
 import blueprint.objects.Group;
+import blueprint.text.Text;
 import objects.SparrowText;
 import objects.HealthIcon;
 import haxe.Json;
@@ -38,11 +38,7 @@ class SongList extends BaseMenu {
     public static function trySelect() {
         var txtPath = Paths.file("songs/list.txt");
         songs = [];
-        var bold = Paths.file("images/menus/bold.xml");
-        @:privateAccess {
-            if (!AnimatedSprite.dataCache.exists(bold))
-                AnimatedSprite.dataCache.set(bold, AnimatedSprite.loadFromFile(bold));
-        }
+        SpriteFrameSet.getCachedFrames(Paths.file("images/menus/bold.xml"));
         if (FileSystem.exists(txtPath))
             getSongs(File.getContent(txtPath).split("\n"));
         else 
@@ -93,7 +89,7 @@ class SongList extends BaseMenu {
         listGrp.position.y = MathExtras.lerp(listGrp.position.y, -120 * curItem, elapsed * 9);
     }
 
-    override function changeItem() {
+    override function changeItem(direction:Int) {
         sound.play(0.0);
         var diffIndex = songs[curItem].diffs.indexOf(curDiff);
         curSubItem = (diffIndex > -1) ? diffIndex : Math.floor(songs[curItem].diffs.length * 0.5);
@@ -109,7 +105,7 @@ class SongList extends BaseMenu {
         lastItem = curItem; // keep this line last
     }
 
-    override function changeSubItem() {
+    override function changeSubItem(direction:Int) {
         curDiff = songs[curItem].diffs[curSubItem];
         setSong(false); // should already be the same so no need to replay.
     }

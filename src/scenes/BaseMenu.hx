@@ -32,16 +32,18 @@ class BaseMenu extends blueprint.Scene {
         var subIndex = subKeybinds.indexOf(keyCode);
 
         if (keyIndex >= 0) {
-            curItem = (curItem + (-1 + 2 * keyIndex) + getMaxItems()) % getMaxItems();
-            changeItem();
+            final dir = (-1 + 2 * keyIndex);
+            curItem = (curItem + dir + getMaxItems()) % getMaxItems();
+            changeItem(dir);
         } else if (subIndex >= 0) {
-            curSubItem = (curSubItem + (-1 + 2 * subIndex) + getMaxSubItems()) % getMaxSubItems();
-            changeSubItem();
+            final dir = (-1 + 2 * subIndex);
+            curSubItem = (curSubItem + dir + getMaxSubItems()) % getMaxSubItems();
+            changeSubItem(dir);
         }
     }
 
-    function changeItem() {}
-    function changeSubItem() {}
+    function changeItem(direction:Int) {}
+    function changeSubItem(direction:Int) {}
     function accept() {}
     function cancel() {}
 

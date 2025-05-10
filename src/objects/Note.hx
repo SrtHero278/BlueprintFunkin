@@ -19,6 +19,7 @@ class Note extends AnimatedSprite {
 	public var length(default, null):Float = 0.0;
 	public var sustain:Sprite;
 	public var tail:AnimatedSprite;
+	public var holdScale:Float = 1;
 
 	public function new(data:ChartNote) {
 		this.data = data;
@@ -42,7 +43,8 @@ class Note extends AnimatedSprite {
 			sustain.position = position;
 
 			tail = new AnimatedSprite(-999, -999);
-			tail.frames = frames;
+			for (set in frameSets)
+				tail.pushFrameSet(set);
 			tail.addPrefixAnim("tail", colors[data.lane % 4] + " tail");
 			tail.playAnim("tail");
 			tail.sourceRect.height = tail.sourceHeight;
@@ -58,7 +60,7 @@ class Note extends AnimatedSprite {
 			@:bypassAccessor @:bypassAccessor tail.memberOf = memberOf;
 
 			sustain.tint.setFull(tint.r, tint.g, tint.b, tint.a * 0.6);
-			sustain.scale.setFull(scale.x, scale.y);
+			sustain.scale.setFull(scale.x, scale.y * holdScale);
 			sustain.rotation = rotation;
 			sustain.queueDraw();
 
@@ -83,7 +85,7 @@ class Note extends AnimatedSprite {
 			sustain.sourceRect.top = Math.min(-height + sustain.texture.height, sustain.texture.height);
 			sustain.dynamicOffset.y = sustain.sourceHeight * 0.5;
 			tail.sourceRect.top = Math.max(-height, 0.0);
-			tail.dynamicOffset.y = sustain.sourceHeight + tail.animHeight * 0.5;
+			tail.dynamicOffset.y = sustain.sourceHeight + tail.sourceRect.height * 0.5;
 		}
 		return length = newLength;
 	}

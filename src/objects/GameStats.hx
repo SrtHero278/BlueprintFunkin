@@ -17,7 +17,7 @@ import math.Vector4;
 
 class GameStats {
 	public var hitWindow(get, never):Float;
-	var ranks:Array<Ranking> = [
+	public var ranks:Array<Ranking> = [
 		{image: "perfect",	window: 1.00,	color: new Vector4(0.0, 1.0, 1.0, 1.0)},
 		{image: "sick",     window: 0.90,   color: new Vector4(1.0, 0.9, 0.65, 1.0)},
 		{image: "amazing",	window: 0.70,	color: new Vector4(0.0, 1.0, 0.0, 1.0)},
@@ -25,7 +25,7 @@ class GameStats {
 		{image: "crap",		window: 0.10,	color: new Vector4(0.8, 0.35, 0.0, 1.0)},
 		{image: "fail",		window: 0.00,	color: new Vector4(0.8, 0.0, 0.0, 1.0)}
 	];
-	var judgements:Array<Judgement> = [
+	public var judgements:Array<Judgement> = [
 		{image: "sick",	window: 0.045,	score: 350,	accuracy: 1,	hpGain: 0.023},
 		{image: "good",	window: 0.090,	score: 250,	accuracy: 0.85,	hpGain: 0.015},
 		{image: "bad",	window: 0.135,	score: 50,	accuracy: 0.6,	hpGain: 0.005},

@@ -93,7 +93,7 @@ class GameSong extends Song {
 				sound.gain = 0.25;
 				sound.keepOnSwitch = true;
 				@:privateAccess if (sound.data != null)
-					audio.push(sound);
+					pushSound(sound);
 				else
 					sound.destroy();
 

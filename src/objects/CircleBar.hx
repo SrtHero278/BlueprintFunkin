@@ -40,6 +40,7 @@ class CircleBar extends Sprite {
                 float mult = smoothstep(percent, percent + offset, abs(mod(atan(dx, dy) + pi + angleOffset, tau)));
                 gl_FragColor = texture(bitmap, TexCoord) * mix(tint, emptyTint, mult);
             }", Shader.defaultVertexSource);
+            barShader.keepIfUnused = true;
         }
         shader = barShader;
     }
