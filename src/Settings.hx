@@ -9,6 +9,7 @@ import blueprint.Game;
 var Settings:SettingData = new SettingData();
 
 class SettingData {
+	public var chartOffset:Float = 0;
 	public var downscroll:Bool = false;
 	public var centerField:Bool = false;
 	public var hideHighJudge:Bool = false;

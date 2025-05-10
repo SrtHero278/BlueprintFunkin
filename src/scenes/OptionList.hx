@@ -13,8 +13,9 @@ class OptionList extends BaseMenu {
 	public static var self:OptionList;
 
 	public final options:Array<MenuOption> = [
+		new MenuOption("Chart Offset", "Additional time for the notes. (Higher = Later)", "chartOffset", Float(-1000, 1000, 1)),
 		new MenuOption("Downscroll", "If the notes will fall down instead of move up.", "downscroll", Bool),
-		new MenuOption("Centererd Field", "If the player's notes will be in the center.", "centerField", Bool),
+		new MenuOption("Centered Field", "If the player's notes will be in the center.", "centerField", Bool),
 		new MenuOption("Hide Highest Judge", "If the highest judgement will be hidden when hit.", "hideHighJudge", Bool),
 		new MenuOption("VSync", "If the framerate will depend on your monitor's refresh rate.", "vSync", Bool),
 		new MenuOption("Left Binds", "What keys to press for the left note.", "leftBinds", Keybind),
@@ -24,7 +25,11 @@ class OptionList extends BaseMenu {
 	];
 	public var getKey:Bool = false;
 	var list:Text;
+	var desc:Text;
 	var sound:SoundPlayer;
+
+	var curDir:Int = 0;
+	var holdTmr:Float = 0.5;
 
 	var curOpt(get, never):MenuOption;
 	function get_curOpt() {
@@ -40,11 +45,28 @@ class OptionList extends BaseMenu {
 		updateList();
 		list.anchor.set(0);
 
+		desc = new Text(10, Game.window.height -10, Paths.font("montserrat"), 24, curOpt.desc);
+		desc.anchor.set(0, 1);
+		add(desc);
+
 		var watermark = new Text(Game.window.width - 10, Game.window.height -10, Paths.font("montserrat"), 24, "TEMPORARY MENU");
 		watermark.anchor.set(1);
 		add(watermark);
 
 		sound = new SoundPlayer(Paths.audio("menus/scroll"), false, false, 1.0);
+	}
+
+	override function update(elapsed:Float) {
+		super.update(elapsed);
+
+		if (curDir != 0) {
+			holdTmr -= elapsed;
+			if (holdTmr <= 0.0) {
+				holdTmr = 0.035;
+				curOpt.move(curDir);
+				updateList();
+			}
+		}
 	}
 
 	function updateList() {
@@ -71,22 +93,30 @@ class OptionList extends BaseMenu {
 			super.keyDown(keyCode, scanCode, mods);
 	}
 
+	override function keyUp(keyCode:Int, scanCode:Int, mods:Int) {
+		if (subKeybinds.contains(keyCode))
+			curDir = 0;
+	}
+
 	override function changeItem(direction:Int) {
 		sound.play(0.0);
+		desc.text = curOpt.desc;
 		updateList();
 	}
 
 	override function changeSubItem(direction:Int) {
-		if (curOpt.hasMovement)
-			curOpt.move(direction);
+		if (!curOpt.hasMovement) return;
 
+		curOpt.move(direction);
+		curDir = direction;
+		holdTmr = 0.5;
 		updateList();
 	}
 
 	override function accept() {
-		if (curOpt.hasEnter)
-			curOpt.enter();
+		if (!curOpt.hasEnter) return;
 
+		curOpt.enter();
 		updateList();
 	}
 
@@ -121,8 +151,8 @@ enum OptionType {
 }
 
 class MenuOption {
-	var name:String;
-	var desc:String;
+	public var name:String;
+	public var desc:String;
 	var internal:String;
 	var type:OptionType;
 

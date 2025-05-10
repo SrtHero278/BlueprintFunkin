@@ -42,6 +42,11 @@ class BaseMenu extends blueprint.Scene {
         }
     }
 
+    override function keyUp(keyCode:Int, scanCode:Int, mods:Int) {
+        if (subMenu != null)
+            subMenu.keyUp(keyCode, scanCode, mods);
+    }
+
     function changeItem(direction:Int) {}
     function changeSubItem(direction:Int) {}
     function accept() {}
