@@ -52,10 +52,10 @@ class Stage extends Group {
 		this.name = name;
 
 		var path = Paths.file("data/stages/" + name + ".json");
-		// if (!sys.FileSystem.exists(path)) {
-		//     path = Paths.file("data/stages/stage.json");
-		//     this.name = "stage";
-		// }
+		if (!sys.FileSystem.exists(path)) {
+		    path = Paths.file("data/stages/stage.json");
+		    this.name = "stage";
+		}
 		jsonData = cast Json.parse(File.getContent(path));
 		defaultZoom = jsonData.zoom;
 		Game.currentScene.mainCamera.zoom.set(defaultZoom);
@@ -83,7 +83,7 @@ class Stage extends Group {
 					setupObject(spr, obj);
 					group.add(spr);
 				case "sparrow":
-					var spr = new AnimatedSprite(getDefaultArray(obj.position, 0, 0), getDefaultArray(obj.position, 1, 0), Paths.file("images/game/stages/" + name + "/" + obj.asset + ".xml"));
+					var spr = new AnimatedSprite(getDefaultArray(obj.position, 0, 0), getDefaultArray(obj.position, 1, 0), Paths.sparrowXml("game/stages/" + name + "/" + obj.asset));
 					setupObject(spr, obj);
 					for (anim in obj.animations)
 						spr.addPrefixAnim(anim.name, anim.prefix, anim.frameRate, anim.looped, anim.frameIndices);

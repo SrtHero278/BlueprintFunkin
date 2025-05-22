@@ -37,6 +37,11 @@ class DefaultEvents {
 				case "Retarget Camera":
 					ev.func = retarget;
 			}
+
+			if (game.eventScripts.exists(ev.name) && game.eventScripts[ev.name].exists("trigger"))
+				ev.func = game.eventScripts[ev.name].get("trigger");
+
+			game.callScripts("eventRegistered", [ev]);
 		}
 	}
 }
