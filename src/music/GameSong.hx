@@ -86,7 +86,7 @@ class GameSong extends Song {
 
 	override function loadAudio(path:String) {
 		final folder = Paths.songFile("audio", path);
-		if (FileSystem.exists(folder)) {
+		if (Paths.exists(folder, true) && FileSystem.isDirectory(folder)) {
 			for (file in FileSystem.readDirectory(folder)) {
 				var tmr = Sys.time();
 				var sound = new SoundPlayer(folder + '/$file');

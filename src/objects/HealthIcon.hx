@@ -18,11 +18,11 @@ class HealthIcon extends blueprint.objects.AnimatedSprite {
 
 	public function loadIcon(icon:String) {
 		var path = Paths.image("game/icons/" + icon);
-		if (!sys.FileSystem.exists(path))
+		if (!Paths.exists(path, true))
 			path = Paths.image("game/icons/UNKNOWN-ICON");
 
 		final xmlPath = path.replace(".png", ".xml");
-		if (sys.FileSystem.exists(xmlPath)) {
+		if (Paths.exists(xmlPath, true)) {
 			loadFrames(xmlPath);
 
 			addPrefixAnim("normal", "normal", 24, true);

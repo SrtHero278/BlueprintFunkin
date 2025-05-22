@@ -38,12 +38,7 @@ class RatingPopup extends Group {
 
         var comboStr = Std.string(stats.combo);
         while (nums.members.length < comboStr.length) {
-            var num = new AnimatedSprite(0, -55);
-            @:privateAccess {
-                for (set in templateNum.frameSets)
-                    num.pushFrameSet(set);
-                num.animData = templateNum.animData;
-            }
+            var num:AnimatedSprite = templateNum.clone();
             nums.add(num);
         }
 
@@ -63,7 +58,7 @@ class RatingPopup extends Group {
     public function new() {
         super();
 
-        templateNum = new AnimatedSprite(0, 0, Paths.file("images/game/popup/numbers.xml"));
+        templateNum = new AnimatedSprite(0, -55, Paths.sparrowXml("game/popup/numbers"));
         for (i in 0...10)
             templateNum.addPrefixAnim(Std.string(i), "num" + i, 24, true);
 

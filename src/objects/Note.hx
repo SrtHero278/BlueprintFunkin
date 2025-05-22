@@ -24,7 +24,7 @@ class Note extends AnimatedSprite {
 	public function new(data:ChartNote) {
 		this.data = data;
 		hitTime = data.time + Settings.chartOffset * 0.001;
-		super(-999, -999, Paths.file("images/game/notes.xml"));
+		super(-999, -999, Paths.sparrowXml("game/notes"));
 		scale.set(0.7);
 
 		final colors = ["purple", "blue", "green", "red"];

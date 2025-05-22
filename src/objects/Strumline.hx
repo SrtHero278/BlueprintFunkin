@@ -31,7 +31,7 @@ class Strumline extends Group {
 
 		final directions = ["left", "down", "up", "right"];
 		for (i in 0...4) {
-			var strum = new AnimatedSprite(160 * 0.7 * (-1.5 + i), 0, Paths.file("images/game/strums.xml"));
+			var strum = new AnimatedSprite(160 * 0.7 * (-1.5 + i), 0, Paths.sparrowXml("game/strums"));
 			strum.addPrefixAnim("static", "arrow" + directions[i].toUpperCase());
 			strum.addPrefixAnim("press", directions[i] + " press", 24);
 			strum.addPrefixAnim("confirm", directions[i] + " confirm", 24);

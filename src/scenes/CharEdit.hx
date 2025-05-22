@@ -578,7 +578,7 @@ class CharEdit extends blueprint.Scene {
 	function finishTexture(data:Array<String>, lines:Array<String>, kinds:Array<TypeEditKind>, index:Int) {
 		char.data.spritesheet = data[0];
 		char.data.icon = data[1];
-		char.loadFrames(Paths.file('images/game/characters/${char.data.spritesheet}.xml'));
+		char.loadFrames(Paths.sparrowXml("game/characters/" + char.data.spritesheet));
 		updateDirArrow();
 	}
 

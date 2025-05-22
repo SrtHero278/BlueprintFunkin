@@ -38,7 +38,7 @@ class SongList extends BaseMenu {
     public static function trySelect() {
         var txtPath = Paths.file("songs/list.txt");
         songs = [];
-        SpriteFrameSet.getCachedFrames(Paths.file("images/menus/bold.xml"));
+        SpriteFrameSet.getCachedFrames(Paths.sparrowXml("menus/bold"));
         if (FileSystem.exists(txtPath))
             getSongs(File.getContent(txtPath).split("\n"));
         else 
