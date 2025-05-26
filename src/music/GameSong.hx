@@ -1,9 +1,15 @@
 package music;
 
+import moonchart.backend.FormatData;
+import moonchart.backend.FormatDetector;
+import moonchart.formats.BasicFormat;
+import moonchart.formats.fnf.legacy.FNFLegacy;
 import sys.FileSystem;
 import sys.io.File;
 import haxe.Json;
 import blueprint.sound.SoundPlayer;
+
+using StringTools;
 
 @:structInit class ChartNote {
 	public var time:Float;
@@ -20,7 +26,38 @@ import blueprint.sound.SoundPlayer;
 	@:optional public var func:haxe.Constraints.Function;
 }
 
+typedef OgChart = {
+	var song:String;
+
+	var ?format:String;
+	var ?events:Array<Dynamic>;
+	var notes:Array<OgSection>;
+	var speed:Float;
+	var bpm:Float;
+
+	var ?player1:String;
+	var ?player2:String;
+	var ?gfVersion:String;
+	var ?stage:String;
+}
+
+typedef OgSection = {
+	var sectionNotes:Array<Array<Dynamic>>;
+	var mustHitSection:Bool;
+	var changeBPM:Bool;
+	var ?bpm:Float;
+	var ?sectionBeats:Float;
+	var ?lengthInSteps:Float;
+}
+
 class GameSong extends Song {
+	public static var multiDiffExts:Array<String>;
+	public static var singleDiffExts:Array<String>;
+	public static var multiDiffFormats:Array<Format>;
+	public static var singleDiffFormats:Array<Format>;
+
+	public var data:DynamicFormat;
+	public var chartMeta:BasicMetaData;
 	public var path:String;
 	public var diff:String = "idk";
 	public var chars:Array<String> = ["bf", "dad", "gf"];
@@ -29,56 +66,78 @@ class GameSong extends Song {
 	public var notes:Array<ChartNote> = [];
 	public var events:Array<Event> = [];
 
-	public function new(path:String, diff:String) {
-		var tmr = Sys.time();
+	public function new(data:DynamicFormat, path:String, diff:String) {
+		super(path, [[0, 0, 120, 0.5]]);
+
+		this.data = data;
 		this.path = path;
+		this.chartMeta = data.getChartMeta();
+
+		loadDiff(diff);
+	}
+
+	public function loadDiff(diff:String) {
 		this.diff = diff;
+		chars = [
+			((chartMeta.extraData[PLAYER_1] != null) ? chartMeta.extraData[PLAYER_1] : "bf"),
+			((chartMeta.extraData[PLAYER_2] != null) ? chartMeta.extraData[PLAYER_2] : "dad"),
+			((chartMeta.extraData[PLAYER_3] != null) ? chartMeta.extraData[PLAYER_3] : "gf")
+		];
+		stage = (chartMeta.extraData.exists(STAGE)) ? chartMeta.extraData[STAGE] : "stage";
+		speed = (chartMeta.scrollSpeeds.exists(diff)) ? chartMeta.scrollSpeeds[diff] : 3.0;
+		notes = [];
+		events = [];
 
-		var name = path;
-		var bpms = [[0, 0, 120, 0.5]];
-		try {
-			final jsonPath = Paths.songFile('diffs/$diff.json', path);
-			final json = Json.parse(File.getContent(jsonPath)).song;
-			name = json.song;
-			chars = [json.player1 != null ? json.player1 : "bf", json.player2 != null ? json.player2 : "dad", json.gfVersion != null ? json.gfVersion : "gf"];
-			stage = json.stage;
-			bpms = [[0, 0, json.bpm, 60 / json.bpm]];
-			speed = json.speed;
-
-			var curBeat:Float = 0;
-			var curTime:Float = 0;
-			var lastMustHit:Bool = false;
-			for (section in cast (json.notes, Array<Dynamic>)) {
-				if (lastMustHit != section.mustHitSection) {
-					lastMustHit = section.mustHitSection;
-					events.push({time: curTime, name: "Retarget Camera", params: [lastMustHit ? 1 : 0]});
-				}
-
-				for (note in cast(section.sectionNotes, Array<Dynamic>)) {
-					note = cast cast(note, Array<Dynamic>);
-					final data:ChartNote = {
-						time: note[0] * 0.001,
-						lane: Math.floor(note[1] % 4),
-						length: Math.max(note[2], 0.0) * 0.001,
-						char: (note[1] % 8 < 4 != lastMustHit) ? 0 : 1
-					}
-					notes.push(data);
-				}
-
-				if (section.changeBPM && section.bpm != null)
-					bpms.push([curTime, curBeat, section.bpm, 60 / section.bpm]);
-				var beatInc = (section.sectionBeats != null) ? section.sectionBeats : (section.lengthInSteps != null) ? section.lengthInSteps * 0.25 : 4;
-				curBeat += beatInc;
-				curTime += beatInc * bpms[bpms.length - 1][3];
+		for (note in data.getNotes(diff)) {
+			final data:ChartNote = {
+				time: note.time * 0.001,
+				lane: Math.floor(note.lane % 4),
+				length: Math.max(note.length, 0.0) * 0.001,
+				char: (note.lane < 4) ? 0 : 1
 			}
-			notes.sort(sortNotes);
-		} catch (e) {
-			Sys.println('Failed to load JSON for $path: $e');
+			notes.push(data);
 		}
 
-		Sys.println('Loaded JSON for $path (${Math.round((Sys.time() - tmr) * 1000) * 0.001} s)');
-		super(name, bpms);
+		// ill add events later
+
+		return this;
 	}
+
+	/*function loadDefault(json:OgChart) {
+		name = json.song;
+		chars = [json.player1 != null ? json.player1 : "bf", json.player2 != null ? json.player2 : "dad", json.gfVersion != null ? json.gfVersion : "gf"];
+		stage = json.stage != null ? json.stage : "stage";
+		bpmChanges = [[0, 0, json.bpm, 60 / json.bpm]];
+		speed = json.speed;
+
+		var curBeat:Float = 0;
+		var curTime:Float = 0;
+		var lastMustHit:Bool = false;
+		var isNewPsych:Bool = json.format != null && json.format.startsWith("psych_v1");
+		for (section in json.notes) {
+			if (lastMustHit != section.mustHitSection) {
+				lastMustHit = section.mustHitSection;
+				events.push({time: curTime, name: "Retarget Camera", params: [lastMustHit ? 1 : 0]});
+			}
+
+			for (note in section.sectionNotes) {
+				final data:ChartNote = {
+					time: note[0] * 0.001,
+					lane: Math.floor(note[1] % 4),
+					length: Math.max(note[2], 0.0) * 0.001,
+					char: (note[1] % 8 < 4 != lastMustHit) ? 0 : 1
+				}
+				notes.push(data);
+			}
+
+			if (section.changeBPM && section.bpm != null)
+				bpmChanges.push([curTime, curBeat, section.bpm, 60 / section.bpm]);
+			var beatInc = (section.sectionBeats != null) ? section.sectionBeats : (section.lengthInSteps != null) ? section.lengthInSteps * 0.25 : 4;
+			curBeat += beatInc;
+			curTime += beatInc * bpmChanges[bpmChanges.length - 1][3];
+		}
+		notes.sort(sortNotes);
+	}*/
 
 	function sortNotes(note1:ChartNote, note2:ChartNote) {
 		return Math.floor(note1.time - note2.time);

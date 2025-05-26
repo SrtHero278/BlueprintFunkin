@@ -1,17 +1,22 @@
 package scenes;
 
+import music.GameSong;
+import moonchart.backend.FormatData;
+import moonchart.backend.FormatDetector;
+import moonchart.formats.BasicFormat;
 import blueprint.Game;
 import blueprint.tweening.EaseList;
 import blueprint.tweening.PropertyTween;
 import blueprint.graphics.SpriteFrames;
+import blueprint.sound.SoundPlayer;
 import blueprint.objects.Group;
 import blueprint.text.Text;
 import objects.SparrowText;
 import objects.HealthIcon;
 import haxe.Json;
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-import blueprint.sound.SoundPlayer;
 
 using StringTools;
 
@@ -19,8 +24,26 @@ using StringTools;
     public var display:String;
     public var icon:String;
     public var color:Array<Float>;
-    @:optional public var internalName:String; // these two get set in code dw.
-    @:optional public var diffs:Array<String>;
+    @:optional public var internalName:String; // these get set in code dw.
+    @:optional public var diffs:Array<String> = [];
+    @:optional public var data:Array<DynamicFormat> = [];
+    @:optional public var multiDiff:Bool = false;
+
+    public function loadFrom(song:String) {
+        final metaPath = Paths.songFile("listMeta.json", song);
+        if (!Paths.exists(metaPath, true)) return;
+
+        var json = Json.parse(File.getContent(metaPath));
+        for (field in Reflect.fields(this)) {
+            if (!Reflect.hasField(json, field))
+                continue;
+            
+            var val = Reflect.field(json, field);
+            if (field != "color" || (val is Array && val.length >= 3))
+                Reflect.setField(this, field, val);
+        }
+        this.internalName = song;
+    }
 }
 
 class SongList extends BaseMenu {
@@ -128,7 +151,8 @@ class SongList extends BaseMenu {
     }
 
     function setSong(play:Bool) {
-        var song = Song.setCurrentFromChart(songs[curItem].internalName, curDiff);
+        final data = songs[curItem].multiDiff ? songs[curItem].data[0] : songs[curItem].data[curSubItem];
+        var song = Song.setCurrentFromChart(data, songs[curItem].internalName, curDiff);
         if (play) {
             Song.current.looping = true;
             Song.current.play();
@@ -164,29 +188,63 @@ class SongList extends BaseMenu {
 
     public static function getSongs(folders:Array<String>) {
         for (song in folders) {
-            var diffPath = Paths.songFile("diffs", song);
-            if (!FileSystem.exists(diffPath)) continue;
-
-            var data:SongMeta = {
+            var meta:SongMeta = {
                 display: song,
                 icon: "UNKNOWN-ICON",
                 color: [255, 255, 255]
             };
-            var metaPath = Paths.songFile("meta.json", song);
-            if (FileSystem.exists(metaPath)) {
-                var json = Json.parse(File.getContent(metaPath));
-                for (field in Reflect.fields(data)) {
-                    if (!Reflect.hasField(json, field))
-                        continue;
-                    
-                    var val = Reflect.field(json, field);
-                    if (field != "color" || (val is Array && val.length >= 3))
-                        Reflect.setField(data, field, val);
+
+            for (i => ext in GameSong.multiDiffExts) {
+                final diffPath = Paths.songFile("diffs" + ext, song);
+                if (Paths.exists(diffPath, true)) {
+                    // i have to add a second path to detect meta, and it needs some file to read so just dup diffPath.
+                    final format = FormatDetector.getFormatData(FormatDetector.findFormat([diffPath, diffPath], {
+                        possibleFormats: GameSong.multiDiffFormats,
+                    }));
+                    final metaPath:Null<String> = (format.hasMetaFile == TRUE) ? Paths.songFile("songMeta." + format.metaFileExtension, song) : null;
+                    var inst:DynamicFormat = cast Type.createInstance(format.handler, []);
+                    inst.fromFile(diffPath, metaPath);
+
+                    meta.loadFrom(song);
+                    meta.data.push(inst);
+                    meta.multiDiff = true;
+                    meta.diffs = inst.diffs;
+                    songs.push(meta);
+                    continue;
                 }
             }
-            data.internalName = song;
-            data.diffs = [for (file in FileSystem.readDirectory(diffPath)) haxe.io.Path.withoutExtension(file)];
-            songs.push(data);
+
+            final diffPath = Paths.songFile("diffs", song);
+            if (!Paths.exists(diffPath, true) || !FileSystem.isDirectory(diffPath)) continue;
+
+            meta.loadFrom(song);
+
+            var metaPath:Null<String> = null;
+            var curFormat:FormatData = null;
+            for (file in FileSystem.readDirectory(diffPath)) {
+                for (ext in GameSong.singleDiffExts) {
+                    if ("." + Path.extension(file) != ext) continue;
+
+                    final filePath = diffPath + "/" + file;
+                    // i have to add a second path to detect meta, and it needs some file to read so just dup diffPath.
+                    final format = FormatDetector.getFormatData(FormatDetector.findFormat([filePath, filePath], {
+                        possibleFormats: GameSong.singleDiffFormats,
+                    }));
+
+                    if (curFormat != null && curFormat != format) continue;
+
+                    curFormat = format;
+                    metaPath = (metaPath == null && curFormat.hasMetaFile == TRUE) ? Paths.songFile("songMeta." + curFormat.metaFileExtension, song) : metaPath;
+
+                    var inst:DynamicFormat = cast Type.createInstance(curFormat.handler, []);
+                    inst.fromFile(filePath, metaPath);
+
+                    meta.data.push(inst);
+                    meta.diffs.push(Path.withoutExtension(file));
+                }
+            }
+
+            songs.push(meta);
         }
     }
     

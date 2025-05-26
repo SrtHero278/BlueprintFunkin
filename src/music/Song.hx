@@ -2,6 +2,7 @@ package music;
 
 // this is possibly over complicating it........
 
+import moonchart.formats.BasicFormat.DynamicFormat;
 import haxe.io.Path;
 import sys.FileSystem;
 import blueprint.sound.SoundPlayer;
@@ -10,6 +11,7 @@ class Song {
 	public static var current:Song;
 
 	public var time(get, set):Float;
+	public var length(default, null):Float = 0;
 	public var looping:Bool = false;
 	public var name:String = "idk";
 	public var bpmChanges:Array<Array<Float>> = [];
@@ -70,6 +72,7 @@ class Song {
 	// for some setup while pushing
 	function pushSound(sound:SoundPlayer) {
 		audio.push(sound);
+		length = Math.max(length, sound.length);
 		sound.finished.add(soundFinished);
 	}
 
@@ -88,13 +91,18 @@ class Song {
 		}
 	}
 
-	public static function setCurrentFromChart(path:String, diff:String):GameSong {
-		var audio = (current != null) ? current.audio : null;
-		var reloadAudio = (current == null || !Std.isOfType(current, GameSong) || cast(current, GameSong).path != path);
+	public static function setCurrentFromChart(data:DynamicFormat, path:String, diff:String):GameSong {
+		final castSong:GameSong = (current != null && current is GameSong) ? cast current : null;
+
+		if (castSong != null && castSong.data == data)
+			return castSong.loadDiff(diff);
+
+		final audio = (current != null) ? current.audio : null;
+		final reloadAudio = (castSong == null || castSong.path != path);
 
 		if (reloadAudio && current != null)
 			current.destroy();
-		var gameSong = new GameSong(path, diff);
+		var gameSong = new GameSong(data, path, diff);
 		current = gameSong;
 
 		if (reloadAudio)

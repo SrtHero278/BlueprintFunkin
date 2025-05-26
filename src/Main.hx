@@ -1,8 +1,10 @@
 package;
 
 import sys.FileSystem;
+import moonchart.backend.FormatDetector;
 import scenes.Title;
 import scenes.ModsList;
+import music.GameSong;
 import bindings.CppHelpers;
 import blueprint.Game;
 
@@ -10,6 +12,27 @@ class Main {
 	public static var game:Game;
 	
 	static function main() {
+		FormatDetector.init();
+		GameSong.multiDiffExts = [".json", ".sm", ".ssc", ".chart"];
+		GameSong.singleDiffExts = [".json", ".osu", ".qua"];
+		GameSong.multiDiffFormats = [
+			FNF_VSLICE,
+			STEPMANIA,
+			STEPMANIA_SHARK,
+			GUITAR_HERO
+		];
+		GameSong.singleDiffFormats = [
+			FNF_LEGACY_PSYCH,
+			FNF_LEGACY_TROLL,
+			FNF_LEGACY_FPS_PLUS,
+			FNF_LEGACY,
+			FNF_CODENAME,
+			FNF_KADE,
+			FNF_MARU,
+			OSU_MANIA,
+			QUAVER
+		];
+
 		ModsList.trySelect();
 		Paths.foldersToCheck[0] = "assets/" + ModsList.mods[0];
 

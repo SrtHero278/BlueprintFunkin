@@ -172,8 +172,6 @@ class Gameplay extends blueprint.Scene {
 		Conductor.update(elapsed);
 		mainCamera.zoom.set(MathExtras.lerp(mainCamera.zoom.x, stage.defaultZoom, elapsed * 60 * 0.05));
 		hudCamera.zoom.set(MathExtras.lerp(hudCamera.zoom.x, 1, elapsed * 60 * 0.05));
-		strumlines[0].rotation = 15 * Math.sin(Conductor.floatBeat * Math.PI * 0.25);
-		strumlines[1].rotation = -15 * Math.sin(Conductor.floatBeat * Math.PI * 0.25);
 
 		var bumpScale = MathExtras.lerp(0.75 * 1.2, 0.75, EaseList.quadOut(Math.abs(Conductor.floatBeat % 1)));
 		leftIcon.scale.setFull(bumpScale * leftIcon.iconScale, bumpScale * leftIcon.iconScale);
@@ -182,7 +180,7 @@ class Gameplay extends blueprint.Scene {
 		for (str in strumlines)
 			str.hitWindow = stats.hitWindow;
 		healthBar.percent = MathExtras.lerp(healthBar.percent, stats.health / stats.maxHealth, elapsed * 3);
-		timeBar.percent = Conductor.position / curSong.audio[0].length;
+		timeBar.percent = Conductor.position / curSong.length;
 
 		for (num in scoreNums.members)
 			num.position.y = MathExtras.lerp(num.position.y, 43 * 0.5, elapsed * 9);

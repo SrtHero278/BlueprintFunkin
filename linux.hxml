@@ -15,6 +15,10 @@
 
 # Libraries (haxelib git blueprint https://github.com/BlueprintFramework-Team/Blueprint)
 --library blueprint 
+# (haxelib git blueprint https://github.com/SrtHero278/hscript-copper)
+--library hscript-copper 
+# (haxelib git blueprint https://github.com/MaybeMaru/moonchart)
+--library moonchart 
 
 # Compile, copy assets, and run. #
 --cpp bin
