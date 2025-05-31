@@ -128,37 +128,43 @@ class GameSong extends Song {
 	}
 
 	function resolveEvent(event:BasicEvent):Event {
-		return switch (event.name) {
+		var name = event.name;
+		var params:Array<Dynamic> = [];
+		switch (event.name) {
 			case moonchart.formats.fnf.legacy.FNFLegacy.FNF_LEGACY_MUST_HIT_SECTION_EVENT:
-				{
-					time: (event.time - offset) * 0.001,
-					name: "Retarget Camera",
-					params: [event.data.mustHitSection ? 1 : 0]
-				};
+				name = "Retarget Camera";
+				params = [event.data.mustHitSection ? 1 : 0];
 			case moonchart.formats.fnf.FNFCodename.CODENAME_CAM_MOVEMENT:
-				{
-					time: (event.time - offset) * 0.001,
-					name: "Retarget Camera",
-					params: event.data.array
-				};
-			case moonchart.formats.fnf.FNFVSlice.VSLICE_FOCUS_EVENT if (event.data.ease == null || event.data.ease == "CLASSIC"):
-				final num = (event.data.char is String) ? Std.parseInt(event.data.char.trim()) : event.data.char;
-				{
-					time: (event.time - offset) * 0.001,
-					name: "Retarget Camera",
-					params: [switch (num) {
-						case 1: 0;
-						case 0: 1;
-						default: num;
-					}]
-				};
+				name = "Retarget Camera";
+				params = event.data.array;
+			case moonchart.formats.fnf.FNFVSlice.VSLICE_FOCUS_EVENT:
+				event.data = expectFields(event.data, ["char", "duration", "ease", "x", "y"]);
+				params = moonchart.backend.Util.resolveEventValues(event);
+			case "ZoomCamera":
+				event.data = expectFields(event.data, ["zoom", "duration", "ease", "mode"]);
+				params = moonchart.backend.Util.resolveEventValues(event);
 			default:
-				{
-					time: (event.time - offset) * 0.001,
-					name: event.name,
-					params: moonchart.backend.Util.resolveEventValues(event)
-				};
+				params = moonchart.backend.Util.resolveEventValues(event);
 		}
+
+		return {
+			time: (event.time - offset) * 0.001,
+			name: name,
+			params: params
+		};
+	}
+
+	function expectFields(input:Dynamic, fields:Array<String>) {
+		var result = {};
+		if (Reflect.isObject(input)) {
+			for (field in fields)
+				Reflect.setField(result, field, Reflect.field(input, field));
+		} else if (fields.length > 0) {
+			Reflect.setField(result, fields[0], input);
+			for (i in 1...fields.length)
+				Reflect.setField(result, fields[i], null);
+		}
+		return result;
 	}
 
 	function resolveOffset():Float {

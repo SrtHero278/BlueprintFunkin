@@ -1,5 +1,7 @@
 package objects;
 
+import blueprint.tweening.PropertyTween;
+import blueprint.tweening.EaseList;
 import blueprint.Game;
 import scenes.Gameplay;
 import music.GameSong.Event;
@@ -11,7 +13,7 @@ class DefaultEvents {
 	static var game:Gameplay;
 
 	static function retarget(char:Int) {
-		if (game.strumlines[char].characters.length <= 0) return;
+		if (game.strumlines[char] == null || game.strumlines[char].characters.length <= 0) return;
 
 		final character = game.strumlines[char].characters[0];
 		if (character.memberOf == null) return;
@@ -31,11 +33,70 @@ class DefaultEvents {
 		);
 	}
 
+	static function vsliceCamera(?char:Int = 1, ?duration:Float = 4, ?ease:String = "CLASSIC", ?x:Float = 0, ?y:Float = 0) {
+		game.mainCamera.targetPosition.setFull(0, 0);
+
+		retarget((char < 2) ? 1 - char : char);
+		game.mainCamera.targetPosition.x += x;
+		game.mainCamera.targetPosition.y += y;
+		
+		switch (ease) {
+			case "CLASSIC": // jobs already done
+			case "INSTANT":
+				game.mainCamera.position.copyFrom(game.mainCamera.targetPosition);
+			default:
+				final easeFunc = Reflect.field(EaseList, ease);
+				if (easeFunc == null) return;
+
+				final tarX = game.mainCamera.targetPosition.x;
+				final tarY = game.mainCamera.targetPosition.y;
+				game.mainCamera.targetPosition.copyFrom(game.mainCamera.position);
+				var twn = new PropertyTween(
+					game.mainCamera,
+					{
+						"position.x": tarX,
+						"position.y": tarY,
+						"targetPosition.x": tarX,
+						"targetPosition.y": tarY
+					},
+					Conductor.stepCrochet * duration,
+					easeFunc
+				);
+		}
+	}
+
+	static function vsliceZoom(?duration:Float = 4, ?ease:String = "linear", ?mode:String = "direct", ?z:Float = 1) {
+		final zoom = (mode == "direct") ? z : game.stage.jsonData.zoom * z;
+
+		if (ease == "INSTANT") {
+			game.stage.defaultZoom = zoom;
+			game.mainCamera.zoom.setFull(zoom, zoom);
+		} else {
+			final easeFunc = Reflect.field(EaseList, ease);
+			if (easeFunc == null) return;
+
+			var twn = new PropertyTween(
+				game,
+				{
+					"mainCamera.zoom.x": zoom,
+					"mainCamera.zoom.y": zoom,
+					"stage.defaultZoom": zoom
+				},
+				Conductor.stepCrochet * duration,
+				easeFunc
+			);
+		}
+	}
+
 	public static function interpetEvents(events:Array<Event>) {
 		for (ev in events) {
 			switch (ev.name) {
 				case "Retarget Camera":
 					ev.func = retarget;
+				case "FocusCamera":
+					ev.func = vsliceCamera;
+				case "ZoomCamera":
+					ev.func = vsliceZoom;
 			}
 
 			if (game.eventScripts.exists(ev.name) && game.eventScripts[ev.name].exists("trigger"))

@@ -68,8 +68,7 @@ class Gameplay extends blueprint.Scene {
 		stats = new GameStats();
 
 		add(stage = new Stage(curSong.stage));
-		mainCamera.position -= 450;
-		mainCamera.targetLerp = 0.04 * 60;
+		mainCamera.targetLerp = 0.05 * 60;
 		mainCamera.zoom.set(stage.defaultZoom);
 		player = new Character(0, 0, curSong.chars[0]);
 		opponent = new Character(0, 0, curSong.chars[1]);
@@ -145,6 +144,7 @@ class Gameplay extends blueprint.Scene {
 		DefaultEvents.game = this;
 		DefaultEvents.interpetEvents(curSong.events);
 		DefaultEvents.retarget(0);
+		mainCamera.position.copyFrom(mainCamera.targetPosition);
 		curSong.time = 0;
 		curSong.looping = false;
 		curSong.play();

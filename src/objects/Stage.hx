@@ -41,7 +41,7 @@ class Stage extends Group {
 	public var camOffsets:Map<String, Vector2> = [];
 	public var facingLeft:Map<String, Bool> = [];
 	public var objects:Map<String, Sprite> = [];
-	var jsonData:StageJSON;
+	public var jsonData:StageJSON;
 
 	function getDefaultArray<T>(array:Array<T>, idx:Int, def:T) {
 		return (array != null && idx < array.length) ? array[idx] : def;
@@ -58,7 +58,6 @@ class Stage extends Group {
 		}
 		jsonData = cast Json.parse(File.getContent(path));
 		defaultZoom = jsonData.zoom;
-		Game.currentScene.mainCamera.zoom.set(defaultZoom);
 		parseGroup(this, jsonData.objects);
 	}
 
