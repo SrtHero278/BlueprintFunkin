@@ -183,7 +183,7 @@ class SongList extends BaseMenu {
         }
 
         var fancyDiff = curDiff.charAt(0).toUpperCase() + curDiff.substring(1, curDiff.length).toLowerCase();
-        songData.text = '< $fancyDiff >\n\nBPM: ${song.bpmChanges[0][2]}\n\nNotes: $notes\nJumps: $jumps\nHands: $hands\nQuads: $quads';
+        songData.text = '< $fancyDiff >\n\nBPM: ${song.timingPoints[0].bpm}\n\nNotes: $notes\nJumps: $jumps\nHands: $hands\nQuads: $quads';
     }
 
     public static function getSongs(folders:Array<String>) {

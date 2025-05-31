@@ -63,15 +63,17 @@ class GameSong extends Song {
 	public var chars:Array<String> = ["bf", "dad", "gf"];
 	public var stage:String = "stage";
 	public var speed:Float = 3.0;
+	public var offset:Float = 0.0;
 	public var notes:Array<ChartNote> = [];
 	public var events:Array<Event> = [];
 
 	public function new(data:DynamicFormat, path:String, diff:String) {
-		super(path, [[0, 0, 120, 0.5]]);
+		super(path, [{bpm: 120}]);
 
 		this.data = data;
 		this.path = path;
 		this.chartMeta = data.getChartMeta();
+		this.offset = resolveOffset();
 
 		loadDiff(diff);
 	}
@@ -85,12 +87,11 @@ class GameSong extends Song {
 		];
 		stage = (chartMeta.extraData.exists(STAGE)) ? chartMeta.extraData[STAGE] : "stage";
 		speed = (chartMeta.scrollSpeeds.exists(diff)) ? chartMeta.scrollSpeeds[diff] : 3.0;
+		
 		notes = [];
-		events = [];
-
 		for (note in data.getNotes(diff)) {
 			final data:ChartNote = {
-				time: note.time * 0.001,
+				time: (note.time - offset) * 0.001,
 				lane: Math.floor(note.lane % 4),
 				length: Math.max(note.length, 0.0) * 0.001,
 				char: (note.lane < 4) ? 0 : 1
@@ -98,9 +99,75 @@ class GameSong extends Song {
 			notes.push(data);
 		}
 
-		// ill add events later
+		timingPoints = [];
+		for (bpm in chartMeta.bpmChanges) {
+			final data:TimingPoint = {
+				time: (Math.min(bpm.time, 0) - offset) * 0.001, // use min mainly cuz cne.
+				bpm: bpm.bpm,
+				stepsPerBeat: bpm.stepsPerBeat,
+				beatsPerMeasure: bpm.beatsPerMeasure
+			};
+			if (timingPoints.length > 0) {
+				final lastPoint = timingPoints[timingPoints.length];
+				final measureDist = Math.fround((data.time - lastPoint.time) / (data.crochet * data.beatsPerMeasure) * 192) / 192;
+				data.measure = lastPoint.measure + measureDist;
+				data.beat = lastPoint.beat + (measureDist * data.beatsPerMeasure);
+				data.step = lastPoint.step + (measureDist * data.beatsPerMeasure * data.stepsPerBeat);
+			}
+			timingPoints.push(data);
+		}
 
 		return this;
+	}
+
+	// seperated so it's not doing so in SongList.
+	public function loadEvents() {
+		events = [];
+		for (event in data.getEvents())
+			events.push(resolveEvent(event));
+	}
+
+	function resolveEvent(event:BasicEvent):Event {
+		return switch (event.name) {
+			case moonchart.formats.fnf.legacy.FNFLegacy.FNF_LEGACY_MUST_HIT_SECTION_EVENT:
+				{
+					time: (event.time - offset) * 0.001,
+					name: "Retarget Camera",
+					params: [event.data.mustHitSection ? 1 : 0]
+				};
+			case moonchart.formats.fnf.FNFCodename.CODENAME_CAM_MOVEMENT:
+				{
+					time: (event.time - offset) * 0.001,
+					name: "Retarget Camera",
+					params: event.data.array
+				};
+			case moonchart.formats.fnf.FNFVSlice.VSLICE_FOCUS_EVENT if (event.data.ease == null || event.data.ease == "CLASSIC"):
+				final num = (event.data.char is String) ? Std.parseInt(event.data.char.trim()) : event.data.char;
+				{
+					time: (event.time - offset) * 0.001,
+					name: "Retarget Camera",
+					params: [switch (num) {
+						case 1: 0;
+						case 0: 1;
+						default: num;
+					}]
+				};
+			default:
+				{
+					time: (event.time - offset) * 0.001,
+					name: event.name,
+					params: moonchart.backend.Util.resolveEventValues(event)
+				};
+		}
+	}
+
+	function resolveOffset():Float {
+		return switch (Type.getClass(data)) {
+			case moonchart.formats.OsuMania: // AudioLeadIn is NOT a song offset.
+				0.0;
+			default:
+				chartMeta.offset;
+		};
 	}
 
 	/*function loadDefault(json:OgChart) {

@@ -61,7 +61,8 @@ class Gameplay extends blueprint.Scene {
 	public function new() {
 		super();
 		curSong = cast Song.current;
-		Conductor.reset(curSong.bpmChanges[0][2]);
+		curSong.loadEvents();
+		Conductor.reset(curSong.timingPoints[0].bpm);
 		Conductor.onBeat.add(beatHit);
 
 		stats = new GameStats();
@@ -203,7 +204,8 @@ class Gameplay extends blueprint.Scene {
 			queuedNote++;
 		}
 		while (queuedEvent < curSong.events.length && Conductor.position >= curSong.events[queuedEvent].time) {
-			Reflect.callMethod(null, curSong.events[queuedEvent].func, curSong.events[queuedEvent].params);
+			if (curSong.events[queuedEvent].func != null)
+				Reflect.callMethod(null, curSong.events[queuedEvent].func, curSong.events[queuedEvent].params);
 			queuedEvent++;
 		}
 		

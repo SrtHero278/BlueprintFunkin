@@ -14,14 +14,14 @@ class Song {
 	public var length(default, null):Float = 0;
 	public var looping:Bool = false;
 	public var name:String = "idk";
-	public var bpmChanges:Array<Array<Float>> = [];
+	public var timingPoints:Array<TimingPoint> = [];
 	public var audio:Array<SoundPlayer> = [];
 	public var complete(get, never):Bool;
 	public var finished:Signal<Song->Void>;
 
-	public function new(name:String, bpms:Array<Array<Float>>) {
+	public function new(name:String, times:Array<TimingPoint>) {
 		this.name = name;
-		this.bpmChanges = bpms;
+		this.timingPoints = times;
 		this.finished = new Signal();
 	}
 
@@ -112,11 +112,11 @@ class Song {
 		return gameSong;
 	}
 
-	public static function setCurrentAsBasic(path:String, name:String, bpm:Float, ?bpms:Array<Array<Float>>):Song {
+	public static function setCurrentAsBasic(path:String, name:String, bpm:Float, ?times:Array<TimingPoint>):Song {
 		if (current != null)
 			current.destroy();
-		bpms = (bpms != null) ? bpms : [[0, 0, bpm, 60 / bpm]];
-		current = new Song(name, bpms);
+		times = (times != null) ? times : [{bpm: bpm}];
+		current = new Song(name, times);
 		current.loadAudio(Paths.audio(path));
 		return current;
 	}
