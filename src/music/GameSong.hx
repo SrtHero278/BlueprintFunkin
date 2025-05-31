@@ -68,13 +68,31 @@ class GameSong extends Song {
 	public var events:Array<Event> = [];
 
 	public function new(data:DynamicFormat, path:String, diff:String) {
-		super(path, [{bpm: 120}]);
-
 		this.data = data;
 		this.path = path;
 		this.chartMeta = data.getChartMeta();
 		this.offset = resolveOffset();
 
+		var times:Array<TimingPoint> = [];
+		for (bpm in chartMeta.bpmChanges) {
+			final data:TimingPoint = {
+				time: (Math.min(bpm.time, 0) - offset) * 0.001, // use min mainly cuz cne.
+				bpm: bpm.bpm,
+				stepsPerBeat: bpm.stepsPerBeat,
+				beatsPerMeasure: bpm.beatsPerMeasure
+			};
+
+			if (times.length > 0) {
+				final lastPoint = times[times.length - 1];
+				final measureDist = Math.fround((data.time - lastPoint.time) / (data.crochet * data.beatsPerMeasure) * 192) / 192;
+				data.measure = lastPoint.measure + measureDist;
+				data.beat = lastPoint.beat + (measureDist * data.beatsPerMeasure);
+				data.step = lastPoint.step + (measureDist * data.beatsPerMeasure * data.stepsPerBeat);
+			}
+			times.push(data);
+		}
+
+		super(path, times);
 		loadDiff(diff);
 	}
 
@@ -97,24 +115,6 @@ class GameSong extends Song {
 				char: (note.lane < 4) ? 0 : 1
 			}
 			notes.push(data);
-		}
-
-		timingPoints = [];
-		for (bpm in chartMeta.bpmChanges) {
-			final data:TimingPoint = {
-				time: (Math.min(bpm.time, 0) - offset) * 0.001, // use min mainly cuz cne.
-				bpm: bpm.bpm,
-				stepsPerBeat: bpm.stepsPerBeat,
-				beatsPerMeasure: bpm.beatsPerMeasure
-			};
-			if (timingPoints.length > 0) {
-				final lastPoint = timingPoints[timingPoints.length];
-				final measureDist = Math.fround((data.time - lastPoint.time) / (data.crochet * data.beatsPerMeasure) * 192) / 192;
-				data.measure = lastPoint.measure + measureDist;
-				data.beat = lastPoint.beat + (measureDist * data.beatsPerMeasure);
-				data.step = lastPoint.step + (measureDist * data.beatsPerMeasure * data.stepsPerBeat);
-			}
-			timingPoints.push(data);
 		}
 
 		return this;

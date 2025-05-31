@@ -16,6 +16,18 @@ package music;
         crochet = 60.0 / to;
         return bpm = to;
     }
+
+    public function new(?bpm:Float = 120, ?time:Float = 0, ?step:Float = 0, ?beat:Float = 0, ?measure:Float = 0, ?stepsPerBeat:Float = 4, ?beatsPerMeasure:Float = 4) {
+        this.bpm = bpm;
+
+        this.time = time;
+        this.step = step;
+        this.beat = beat;
+        this.measure = measure;
+        
+        this.stepsPerBeat = stepsPerBeat;
+        this.beatsPerMeasure = beatsPerMeasure;
+    }
 }
 
 class Conductor {
