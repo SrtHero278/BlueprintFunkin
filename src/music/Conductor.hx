@@ -24,7 +24,7 @@ package music;
         this.step = step;
         this.beat = beat;
         this.measure = measure;
-        
+
         this.stepsPerBeat = stepsPerBeat;
         this.beatsPerMeasure = beatsPerMeasure;
     }
@@ -45,7 +45,7 @@ class Conductor {
     public static var measure:Int = 0;
     public static var beat:Int = 0;
     public static var step:Int = 0;
-    public static var curChange:Int = 0;
+    public static var curChange(get, default):Int = 0;
 
     public static var onMeasure:Signal<Int->Void> = new Signal();
     public static var onBeat:Signal<Int->Void> = new Signal();
@@ -75,15 +75,17 @@ class Conductor {
             var points = Song.current.timingPoints;
             position = Song.current.time;
 
+            var change = curChange;
             if (position < lastTime) {
-                while (curChange > 0 && points[curChange].time > position)
-                    --curChange;
+                while (change > 0 && points[change - 1].time > position)
+                    --change;
             } else if (points.length > 1) {
-                while (curChange < points.length && points[curChange].time < position)
-                    ++curChange;
+                while (change < points.length - 1 && points[change + 1].time < position)
+                    ++change;
             }
+            curChange = change;
 
-            final curPoint = points[curChange];
+            final curPoint = points[change];
             final measureDist = (position - curPoint.time + beatOffset) / (curPoint.crochet * curPoint.beatsPerMeasure);
             floatMeasure = curPoint.measure + measureDist;
             floatBeat = curPoint.beat + (measureDist * curPoint.beatsPerMeasure);
@@ -95,8 +97,14 @@ class Conductor {
             floatMeasure = floatBeat * 0.25;
         }
 
+        final floorMeasure = Math.floor(floatMeasure);
         final floorBeat = Math.floor(floatBeat);
         final floorStep = Math.floor(floatStep);
+
+        if (measure != floorMeasure) {
+            measure = floorMeasure;
+            onMeasure.emit(measure);
+        }
 
         if (beat != floorBeat) {
             beat = floorBeat;
@@ -107,6 +115,11 @@ class Conductor {
             step = floorStep;
             onStep.emit(step);
         }
+    }
+
+    static function get_curChange() {
+        final maxPoints = (Song.current != null) ? Song.current.timingPoints.length - 1 : 0;
+        return Std.int(Math.min(Math.max(curChange, 0), maxPoints));
     }
 
     static function get_bpm():Float {
