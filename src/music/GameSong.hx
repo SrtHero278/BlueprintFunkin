@@ -2,6 +2,7 @@ package music;
 
 import moonchart.backend.FormatData;
 import moonchart.backend.FormatDetector;
+import moonchart.backend.Util.resolveEventValues;
 import moonchart.formats.BasicFormat;
 import moonchart.formats.fnf.legacy.FNFLegacy;
 import sys.FileSystem;
@@ -134,17 +135,28 @@ class GameSong extends Song {
 			case moonchart.formats.fnf.legacy.FNFLegacy.FNF_LEGACY_MUST_HIT_SECTION_EVENT:
 				name = "Retarget Camera";
 				params = [event.data.mustHitSection ? 1 : 0];
+
 			case moonchart.formats.fnf.FNFCodename.CODENAME_CAM_MOVEMENT:
 				name = "Retarget Camera";
 				params = event.data.array;
+			case "Camera Modulo Change":
+				name = "Bump Interval";
+				params = event.data.array;
+
 			case moonchart.formats.fnf.FNFVSlice.VSLICE_FOCUS_EVENT:
 				event.data = expectFields(event.data, ["char", "duration", "ease", "x", "y"]);
-				params = moonchart.backend.Util.resolveEventValues(event);
+				params = resolveEventValues(event);
 			case "ZoomCamera":
 				event.data = expectFields(event.data, ["zoom", "duration", "ease", "mode"]);
-				params = moonchart.backend.Util.resolveEventValues(event);
+				params = resolveEventValues(event);
+			case "SetCameraBop":
+				event.data = expectFields(event.data, ["intensity", "rate"]);
+				name = "Bump Interval";
+				params = resolveEventValues(event);
+				params = [params[1], params[0]]; // alphabetical ordering sooooo
+
 			default:
-				params = moonchart.backend.Util.resolveEventValues(event);
+				params = resolveEventValues(event);
 		}
 
 		return {

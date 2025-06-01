@@ -33,6 +33,11 @@ class DefaultEvents {
 		);
 	}
 
+	static function bumpInterval(?interval:Int = 4, ?strength:Float = 1.0) {
+		game.bumpInterval = interval;
+		game.bumpStrength = strength;
+	}
+
 	static function vsliceCamera(?char:Int = 1, ?duration:Float = 4, ?ease:String = "CLASSIC", ?x:Float = 0, ?y:Float = 0) {
 		game.mainCamera.targetPosition.setFull(0, 0);
 
@@ -93,6 +98,8 @@ class DefaultEvents {
 			switch (ev.name) {
 				case "Retarget Camera":
 					ev.func = retarget;
+				case "Bump Interval":
+					ev.func = bumpInterval;
 				case "FocusCamera":
 					ev.func = vsliceCamera;
 				case "ZoomCamera":

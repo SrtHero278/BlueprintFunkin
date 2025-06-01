@@ -53,6 +53,8 @@ class Gameplay extends blueprint.Scene {
 	public var player:Character;
 	public var opponent:Character;
 	public var spectator:Character;
+	public var bumpInterval:Int = 4;
+	public var bumpStrength:Float = 1.0;
 
 	// Script Stuff
 	public var eventScripts:Map<String, HScript> = [];
@@ -222,9 +224,9 @@ class Gameplay extends blueprint.Scene {
 	function beatHit(beat:Int) {
 		callScripts("beatHit", [beat]);
 
-		if (beat % 4 == 0) {
-			hudCamera.zoom += 0.015;
-			mainCamera.zoom += 0.03;
+		if (bumpInterval > 0 && beat % bumpInterval == 0) {
+			hudCamera.zoom += 0.015 * bumpStrength;
+			mainCamera.zoom += 0.03 * bumpStrength;
 		}
 	}
 

@@ -31,7 +31,10 @@ using StringTools;
 
     public function loadFrom(song:String) {
         final metaPath = Paths.songFile("listMeta.json", song);
-        if (!Paths.exists(metaPath, true)) return;
+        if (!Paths.exists(metaPath, true)) {
+            this.internalName = song;
+            return;
+        }
 
         var json = Json.parse(File.getContent(metaPath));
         for (field in Reflect.fields(this)) {
@@ -43,6 +46,24 @@ using StringTools;
                 Reflect.setField(this, field, val);
         }
         this.internalName = song;
+    }
+
+    public function compareDiffs(input:Array<String>) {
+        if (diffs.length <= 0) {
+            diffs = input;
+            return;
+        }
+
+        final lowerInputs = [for (diff in input) diff.toLowerCase()];
+        var i = diffs.length - 1;
+        while (i >= 0) {
+            final inputIdx = lowerInputs.indexOf(diffs[i].toLowerCase());
+            if (inputIdx < 0)
+                diffs.splice(i, 1);
+            else 
+                diffs[i] = input[inputIdx]; // in case it has interesting captitalization
+            --i;
+        }
     }
 }
 
@@ -208,7 +229,7 @@ class SongList extends BaseMenu {
                     meta.loadFrom(song);
                     meta.data.push(inst);
                     meta.multiDiff = true;
-                    meta.diffs = inst.diffs;
+                    meta.compareDiffs(inst.diffs);
                     songs.push(meta);
                     continue;
                 }
@@ -219,6 +240,7 @@ class SongList extends BaseMenu {
 
             meta.loadFrom(song);
 
+            var diffs:Array<String> = [];
             var metaPath:Null<String> = null;
             var curFormat:FormatData = null;
             for (file in FileSystem.readDirectory(diffPath)) {
@@ -240,10 +262,11 @@ class SongList extends BaseMenu {
                     inst.fromFile(filePath, metaPath);
 
                     meta.data.push(inst);
-                    meta.diffs.push(Path.withoutExtension(file));
+                    diffs.push(Path.withoutExtension(file));
                 }
             }
 
+            meta.compareDiffs(diffs);
             songs.push(meta);
         }
     }
