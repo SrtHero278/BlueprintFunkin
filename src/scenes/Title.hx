@@ -72,8 +72,8 @@ class Title extends BaseMenu {
 
         add(optSprite = new Sprite(640, 650));
         optSprite.texture = options[curItem].image;
-        add(leftArrow = new Sprite(640 - optSprite.width * 0.5 - 25, 650, Paths.image("menus/arrow")));
-        add(rightArrow = new Sprite(640 + optSprite.width * 0.5 + 25, 650, Paths.image("menus/arrow")));
+        add(leftArrow = new Sprite(640 - optSprite.width * 0.5 - 25, 650, Paths.image("menus/titleOpts/arrow")));
+        add(rightArrow = new Sprite(640 + optSprite.width * 0.5 + 25, 650, Paths.image("menus/titleOpts/arrow")));
         rightArrow.flipX = true;
 
         sound = new SoundPlayer(Paths.audio("menus/scroll"), false, false, 1.0);

@@ -5,6 +5,7 @@ import moonchart.backend.FormatDetector;
 import moonchart.backend.Util.resolveEventValues;
 import moonchart.formats.BasicFormat;
 import moonchart.formats.fnf.legacy.FNFLegacy;
+import moonchart.parsers.StepManiaParser;
 import sys.FileSystem;
 import sys.io.File;
 import haxe.Json;
@@ -52,8 +53,6 @@ typedef OgSection = {
 }
 
 class GameSong extends Song {
-	public static var multiDiffExts:Array<String>;
-	public static var singleDiffExts:Array<String>;
 	public static var multiDiffFormats:Array<Format>;
 	public static var singleDiffFormats:Array<Format>;
 
@@ -77,7 +76,7 @@ class GameSong extends Song {
 		var times:Array<TimingPoint> = [];
 		for (bpm in chartMeta.bpmChanges) {
 			final data:TimingPoint = {
-				time: (Math.min(bpm.time, 0) - offset) * 0.001, // use min mainly cuz cne.
+				time: (Math.max(bpm.time, 0) - offset) * 0.001, // use max mainly cuz cne.
 				bpm: bpm.bpm,
 				stepsPerBeat: bpm.stepsPerBeat,
 				beatsPerMeasure: bpm.beatsPerMeasure
@@ -107,13 +106,14 @@ class GameSong extends Song {
 		stage = (chartMeta.extraData.exists(STAGE)) ? chartMeta.extraData[STAGE] : "stage";
 		speed = (chartMeta.scrollSpeeds.exists(diff)) ? chartMeta.scrollSpeeds[diff] : 3.0;
 		
+		final invertLanes = resolveInvert(diff);
 		notes = [];
 		for (note in data.getNotes(diff)) {
 			final data:ChartNote = {
 				time: (note.time - offset) * 0.001,
 				lane: Math.floor(note.lane % 4),
 				length: Math.max(note.length, 0.0) * 0.001,
-				char: (note.lane < 4) ? 0 : 1
+				char: (invertLanes != (note.lane < 4)) ? 0 : 1
 			}
 			notes.push(data);
 		}
@@ -188,41 +188,19 @@ class GameSong extends Song {
 		};
 	}
 
-	/*function loadDefault(json:OgChart) {
-		name = json.song;
-		chars = [json.player1 != null ? json.player1 : "bf", json.player2 != null ? json.player2 : "dad", json.gfVersion != null ? json.gfVersion : "gf"];
-		stage = json.stage != null ? json.stage : "stage";
-		bpmChanges = [[0, 0, json.bpm, 60 / json.bpm]];
-		speed = json.speed;
-
-		var curBeat:Float = 0;
-		var curTime:Float = 0;
-		var lastMustHit:Bool = false;
-		var isNewPsych:Bool = json.format != null && json.format.startsWith("psych_v1");
-		for (section in json.notes) {
-			if (lastMustHit != section.mustHitSection) {
-				lastMustHit = section.mustHitSection;
-				events.push({time: curTime, name: "Retarget Camera", params: [lastMustHit ? 1 : 0]});
-			}
-
-			for (note in section.sectionNotes) {
-				final data:ChartNote = {
-					time: note[0] * 0.001,
-					lane: Math.floor(note[1] % 4),
-					length: Math.max(note[2], 0.0) * 0.001,
-					char: (note[1] % 8 < 4 != lastMustHit) ? 0 : 1
-				}
-				notes.push(data);
-			}
-
-			if (section.changeBPM && section.bpm != null)
-				bpmChanges.push([curTime, curBeat, section.bpm, 60 / section.bpm]);
-			var beatInc = (section.sectionBeats != null) ? section.sectionBeats : (section.lengthInSteps != null) ? section.lengthInSteps * 0.25 : 4;
-			curBeat += beatInc;
-			curTime += beatInc * bpmChanges[bpmChanges.length - 1][3];
-		}
-		notes.sort(sortNotes);
-	}*/
+	function resolveInvert(diff:String):Bool {
+		return switch (Type.getClass(data)) {
+			case moonchart.formats.OsuMania:
+				chartMeta.extraData.get(LANES_LENGTH) < 8;
+			case moonchart.formats.StepMania | moonchart.formats.StepManiaShark:
+				final sm:moonchart.formats.StepMania.StepManiaBasic<StepManiaFormat> = cast data;
+				sm.data.NOTES.get(diff).dance == SINGLE;
+			case moonchart.formats.Quaver:
+				true; // its always gonna be 4-7 so
+			default:
+				false;
+		};
+	}
 
 	function sortNotes(note1:ChartNote, note2:ChartNote) {
 		return Math.floor(note1.time - note2.time);
@@ -244,5 +222,71 @@ class GameSong extends Song {
 				Sys.println('Loaded $file for $path (${Math.round((Sys.time() - tmr) * 1000) * 0.001} s)');
 			}
 		}
+	}
+
+
+
+	/**
+		A variation of FormatDetector.findFormat designed to work better with BlueprintFunkin's multidiff charts.
+
+		Or, at least it was. It got modified heavily.
+	**/
+	public static function findMultiDiff(inputFile:String, metaPath:String):FormatData {
+		var possibleFormats:Array<Format> = multiDiffFormats.filter((format) -> {
+			final data = FormatDetector.getFormatData(format);
+			final file = inputFile + "." + data.extension;
+
+			return (FileSystem.exists(file) && (data.hasMetaFile != TRUE || FileSystem.exists(metaPath + "." + data.metaFileExtension)));
+		});
+
+		// Check if we got the format with the first filter
+		if (possibleFormats.length <= 0)
+			return null; // dont say anything, we still have single diffs to check!
+		else if (possibleFormats.length == 1)
+			return FormatDetector.getFormatData(possibleFormats[0]);
+
+		// Not sure how i can make findFromContents work with this so checkContents is off meaning "Fuck it we ball" -Maru
+		return FormatDetector.getFormatData(possibleFormats[possibleFormats.length - 1]);
+	}
+
+	/**
+		A variation of FormatDetector.findFormat designed to work better with BlueprintFunkin's singlediff charts.
+	**/
+	public static function trySingleDiff(inputFile:String, metaPath:String):FormatData {
+		var isFolder:Bool = FileSystem.isDirectory(inputFile);
+		var fileExtension:String = (isFolder ? "" : haxe.io.Path.extension(inputFile));
+
+		// Check based on simple data like extensions, folders, needs metadata, etc
+		var possibleFormats = singleDiffFormats.filter((format) -> {
+			final data = FormatDetector.getFormatData(format);
+
+			// Setting up some format crap
+			final forcedMeta:Bool = (data.hasMetaFile == TRUE);
+			final possibleMeta:Bool = (data.hasMetaFile == POSSIBLE);
+			final needsFolder:Bool = data.extension.startsWith("folder");
+			final extension:String = (needsFolder ? data.extension.split("::").pop() : data.extension);
+
+			// Do the checks for matching formats
+			final hasMeta:Bool = FileSystem.exists(metaPath + "." + data.metaFileExtension);
+			final metaMatch:Bool = ((forcedMeta == hasMeta) || possibleMeta);
+			final folderMatch:Bool = (needsFolder == isFolder);
+			final extensionMatch:Bool = (isFolder || (extension == fileExtension));
+
+			// Finally, filter in or out matching formats
+			return metaMatch && folderMatch && extensionMatch;
+		});
+
+		// Check if we got the format with the first filter
+		if (possibleFormats.length <= 0)
+		{
+			Sys.println('Failed to load "$inputFile": Format nonexistant.');
+			return null;
+		}
+		else if (possibleFormats.length == 1)
+		{
+			return FormatDetector.getFormatData(possibleFormats[0]);
+		}
+
+		return FormatDetector.getFormatData(FormatDetector.findFromContents(File.getContent(inputFile), {possibleFormats: possibleFormats}));
 	}
 }

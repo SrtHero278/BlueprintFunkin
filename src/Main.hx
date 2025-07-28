@@ -13,8 +13,6 @@ class Main {
 	
 	static function main() {
 		FormatDetector.init();
-		GameSong.multiDiffExts = [".json", ".sm", ".ssc", ".chart"];
-		GameSong.singleDiffExts = [".json", ".osu", ".qua"];
 		GameSong.multiDiffFormats = [
 			FNF_VSLICE,
 			STEPMANIA,
@@ -22,15 +20,15 @@ class Main {
 			GUITAR_HERO
 		];
 		GameSong.singleDiffFormats = [
-			FNF_LEGACY_PSYCH,
-			FNF_LEGACY_TROLL,
-			FNF_LEGACY_FPS_PLUS,
-			FNF_LEGACY,
+			OSU_MANIA,
+			QUAVER,
 			FNF_CODENAME,
 			FNF_KADE,
 			FNF_MARU,
-			OSU_MANIA,
-			QUAVER
+			FNF_LEGACY_TROLL,
+			FNF_LEGACY_PSYCH,
+			FNF_LEGACY_FPS_PLUS,
+			FNF_LEGACY
 		];
 
 		ModsList.trySelect();
