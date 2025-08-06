@@ -234,6 +234,7 @@ class SongList extends BaseMenu {
 			meta.loadFrom(song);
 
 			final diffPath = Paths.songFile("diffs", song);
+			var skipMeta:Bool = false;
 			var metaPath:Null<String> = null;
 			var diffs:Array<String> = [];
 			var curFormat:FormatData = null;
@@ -245,8 +246,17 @@ class SongList extends BaseMenu {
 				if (format == null || (curFormat != null && curFormat != format)) continue;
 
 				curFormat = format;
-				metaPath = (metaPath == null && curFormat.hasMetaFile != FALSE) ? (metaPathNoExt + "." + curFormat.metaFileExtension) : metaPath;
-				
+				metaPath = (!skipMeta && metaPath == null && curFormat.hasMetaFile != FALSE) ? (metaPathNoExt + "." + curFormat.metaFileExtension) : metaPath;
+				if (!skipMeta && metaPath != null && !FileSystem.exists(metaPath)) {
+					if (curFormat.hasMetaFile == POSSIBLE) {
+						metaPath = null;
+						skipMeta = true;
+					} else {
+						Sys.println('Failed to load "$file" for "$song": "${"songMeta." + curFormat.metaFileExtension}" is required.');
+						continue;
+					}
+				}
+
 				var inst:DynamicFormat = cast Type.createInstance(curFormat.handler, []);
 				inst.fromFile(filePath, metaPath);
 
