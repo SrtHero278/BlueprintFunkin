@@ -140,7 +140,6 @@ class Gameplay extends blueprint.Scene {
 		hud.cameras = [hudCamera];
 
 		loadScripts();
-		setOnScripts("scene", this);
 		callScripts("create");
 
 		DefaultEvents.game = this;

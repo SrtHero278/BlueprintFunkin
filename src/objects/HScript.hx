@@ -57,8 +57,7 @@ class HScript {
 	}
 
 	function initVars() {
-		// doesn't work well on the constructor so i'll just do it in Gameplay
-		// set("scene", blueprint.Game.currentScene);
+		set("scene", blueprint.Game.currentScene);
 
 		set("Conductor", music.Conductor);
 		set("Character", objects.Character);

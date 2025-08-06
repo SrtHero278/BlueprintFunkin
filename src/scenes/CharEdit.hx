@@ -8,14 +8,13 @@ import blueprint.Game;
 import blueprint.input.InputHandler;
 import blueprint.objects.Group;
 import blueprint.objects.Sprite;
+import blueprint.objects.ColorRect;
 import blueprint.text.Text;
-import blueprint.graphics.Texture;
 import objects.Character;
 import haxe.io.Path;
 import math.Vector4;
 
 import bindings.CppHelpers;
-import bindings.Glad;
 import bindings.Glfw;
 
 using StringTools;
@@ -82,7 +81,7 @@ class CharEdit extends blueprint.Scene {
 	var cancelInput:Bool = false;
 
 	var dirArrow:Sprite;
-	var line:Sprite;
+	var line:ColorRect;
 	var icon:HealthIcon;
 	var char:Character;
 	var anims:Array<String> = [];
@@ -90,7 +89,6 @@ class CharEdit extends blueprint.Scene {
 	var controls:Text;
 	var controlData:Text;
 	var animList:Text;
-	var pixel:Texture;
 	var uiGroup:Group;
 
 	public function new() {
@@ -98,18 +96,10 @@ class CharEdit extends blueprint.Scene {
 		Game.window.clearColor = Game.window.clearColor.setFull(0.125, 0.125, 0.125, 1.0);
 		position.setFull(640, 360);
 
-		// man i really gotta make a color rect
-		pixel = new Texture();
-		var data:cpp.RawPointer<cpp.UInt8> = CppHelpers.malloc(4, cpp.UInt8);
-		data[0] = data[1] = data[2] = 255;
-		data[3] = 128;
-		Glad.texImage2D(Glad.TEXTURE_2D, 0, Glad.RGBA, 1, 1, 0, Glad.RGBA, Glad.UNSIGNED_BYTE, data);
-		CppHelpers.free(data);
-
-		line = new Sprite(0, 767.5 - 360);
+		line = new ColorRect(0, 767.5 - 360, 1280, 5);
+		line.zoomFactor.x = 0;
 		line.parallax.x = 0;
-		line.sourceRect.setFull(0, 0, 1280, 5);
-		line.texture = pixel;
+		line.tint.a = 0.5;
 		add(line);
 
 		char = new Character(0, -360, "", false);
@@ -140,20 +130,20 @@ class CharEdit extends blueprint.Scene {
 
 		controlData = new Text(1270, 710, Paths.font("montserrat"), 16, controlList[0]);
 		controlData.parallax.set(0, 0);
-		controlData.zoomFactor = 0;
+		controlData.zoomFactor.set();
 		controlData.anchor.setFull(1, 1);
 		controlData.alignment = RIGHT;
 		uiGroup.add(controlData);
 
 		controls = new Text(30, 690, Paths.font("montserrat"), 28, "");
 		controls.parallax.set(0, 0);
-		controls.zoomFactor = 0;
+		controls.zoomFactor.set();
 		controls.anchor.setFull(0, 1);
 		uiGroup.add(controls);
 
 		animList = new Text(10, 10, Paths.font("montserrat"), 16, "");
 		animList.parallax.set(0, 0);
-		animList.zoomFactor = 0;
+		animList.zoomFactor.set();
 		animList.anchor.setFull(0, 0);
 		uiGroup.add(animList);
 
@@ -167,13 +157,11 @@ class CharEdit extends blueprint.Scene {
 		super.update(elapsed);
 		if (curMode == Main || curMode == Global) {
 			var camMult = 150 + 500 * (Glfw.getKey(Game.window.cWindow, Glfw.KEY_LEFT_SHIFT) + Glfw.getKey(Game.window.cWindow, Glfw.KEY_RIGHT_SHIFT));
-			mainCamera.position.x += (Glfw.getKey(Game.window.cWindow, Glfw.KEY_J) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_L)) * elapsed * camMult;
-			mainCamera.position.y += (Glfw.getKey(Game.window.cWindow, Glfw.KEY_I) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_K)) * elapsed * camMult;
+			mainCamera.position.x += (Glfw.getKey(Game.window.cWindow, Glfw.KEY_L) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_J)) * elapsed * camMult;
+			mainCamera.position.y += (Glfw.getKey(Game.window.cWindow, Glfw.KEY_K) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_I)) * elapsed * camMult;
 	
 			var newScale = mainCamera.zoom.x + (Glfw.getKey(Game.window.cWindow, Glfw.KEY_E) - Glfw.getKey(Game.window.cWindow, Glfw.KEY_Q)) * elapsed;
 			mainCamera.zoom.setFull(newScale, newScale);
-	
-			line.scale.x = 1.0 / newScale;
 		}
 	}
 
@@ -255,7 +243,7 @@ class CharEdit extends blueprint.Scene {
 							char.data.animations.insert(newIndex, oldData);
 						}
 						animIndex = newIndex;
-					case Glfw.KEY_S | Glfw.KEY_W:
+					case Glfw.KEY_S:
 						if (mods & Glfw.MOD_CONTROL != 0) {
 							var lines = ["Save as: "];
 							curMode = Type([char.curChar], lines, 0, finishSaveChar);
@@ -580,11 +568,6 @@ class CharEdit extends blueprint.Scene {
 		char.data.icon = data[1];
 		char.loadFrames(Paths.sparrowXml("game/characters/" + char.data.spritesheet));
 		updateDirArrow();
-	}
-
-	override function destroy() {
-		super.destroy();
-		pixel.destroy();
 	}
 
 	final faceColors:Array<Vector4> = [
