@@ -79,5 +79,6 @@ class HScript {
 		set("EaseList", blueprint.tweening.EaseList);
 
 		set("Std", Std);
+		set("Math", Math);
 	}
 }
