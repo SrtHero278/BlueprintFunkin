@@ -7,6 +7,7 @@
 --define HXCPP_M64
 --define no-console
 
+--define hscriptPos
 --define linux
 --define HXCPP_CHECK_POINTER
 --define HXCPP_STACK_LINE

@@ -21,8 +21,8 @@ class HScript {
 			parser.line = 1;
 			final expr = parser.parseString(this.code, this.path);
 			interp.execute(expr);
-		} catch (e) {
-			Sys.println('Failed to load ${this.path == null ? this.code : this.path}\n\t- $e');
+		} catch (e:hscript.Expr.Error) {
+			Sys.println('Failed to load ${this.path == null ? this.code : this.path}\n\t- ${e.toString()}');
 			interp = null;
 		}
 	}
@@ -46,7 +46,13 @@ class HScript {
 		final func = interp.variables.get(name);
 		if (func == null || !Reflect.isFunction(func)) return;
 
-		Reflect.callMethod(null, func, (args == null ? [] : args));
+		try {
+			Reflect.callMethod(null, func, (args == null ? [] : args));
+		} catch(e:hscript.Expr.Error) {
+			Sys.println('Failed to run \"$name\" on ${this.path == null ? this.code : this.path}\n\t- ${e.toString()}');
+		} catch (e:Dynamic) {
+			Sys.println('Failed to run \"$name\" on ${this.path == null ? this.code : this.path}\n\t- ${e.details()}');
+		}
 	}
 
 	public static function initParser() {
