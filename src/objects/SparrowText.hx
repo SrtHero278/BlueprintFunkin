@@ -4,6 +4,7 @@ import math.Vector2;
 import blueprint.objects.AnimatedSprite;
 import blueprint.objects.Sprite;
 import blueprint.text.Text.TextAlignment;
+import blueprint.Game;
 
 // might modify this later on but this will do.
 // Basically blueprint.objects.Text but with AnimatedSprite stuff.
@@ -35,6 +36,7 @@ class SparrowText extends AnimatedSprite {
 		_curX = 0.0;
 		_curLine = 0;
 		shader.setUniform("tint", tint);
+		animTime += Game.elapsed;
 		for (i in 0...text.length) {
 			var charAt = text.charAt(i);
 			if (charAt == '\n') {
@@ -46,7 +48,6 @@ class SparrowText extends AnimatedSprite {
 			final anim = tryAnim(charAt);
 			if (anim.indexes.length > 0) {
 				curFrame = anim.indexes[Math.floor((animTime % anim.length) * anim.fps)];
-				texture = getFrame(curFrame).texture;
 				super.draw();
 				_curX += anim.width;
 			} else

@@ -69,6 +69,7 @@ using StringTools;
 
 class SongList extends BaseMenu {
 	static var songs:Array<SongMeta> = [];
+	var title:Title;
 	var openTwn:PropertyTween;
 	var listGrp:Group;
 	var songData:Text;
@@ -91,8 +92,9 @@ class SongList extends BaseMenu {
 		return songs.length > 0;
 	}
 
-	public function new() {
+	public function new(?title:Title) {
 		super();
+		this.title = title;
 		add(listGrp = new Group());
 		add(songData = new Text(2280, 540, Paths.font("montserrat"), 32, "um"));
 		songData.alignment = RIGHT;
@@ -129,6 +131,10 @@ class SongList extends BaseMenu {
 
 	override function update(elapsed:Float) {
 		super.update(elapsed);
+
+		 if (title != null)
+			title.logoScaling(elapsed);
+
 		listGrp.position.x = MathExtras.lerp(listGrp.position.x, -20 * curItem, elapsed * 9);
 		listGrp.position.y = MathExtras.lerp(listGrp.position.y, -120 * curItem, elapsed * 9);
 	}
@@ -159,13 +165,12 @@ class SongList extends BaseMenu {
 	}
 
 	override function cancel() {
-		var title:scenes.Title = cast memberOf;
-		title.subMenu = null;
-		title.acceptTwn.rewind();
+		if (title != null)
+			title.acceptTwn.rewind();
+
 		openTwn.rewind();
 		openTwn.deleteWhenDone = true;
 		openTwn.finished.add((twn) -> {
-			memberOf.remove(this);
 			sound.destroy();
 			destroy();
 		});

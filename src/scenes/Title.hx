@@ -29,6 +29,7 @@ class Title extends BaseMenu {
     var rightArrow:Sprite;
     var optSprite:Sprite;
     var targetScale:Float = 0.9;
+    var waiting:Bool = false;
 
     public function new() {
         super();
@@ -37,21 +38,18 @@ class Title extends BaseMenu {
         options = [{
             image: Texture.getCachedTex(Paths.image("menus/titleOpts/play")),
             onSelect: function() {
-                subMenu = new SongList();
-                add(subMenu);
+                Game.addScene(SongList, this);
             },
             trySelect: SongList.trySelect
         }, {
             image: Texture.getCachedTex(Paths.image("menus/titleOpts/options")),
             onSelect: function() {
-                subMenu = new OptionList();
-                add(subMenu);
+                Game.addScene(OptionList, this);
             }
         }, {
             image: Texture.getCachedTex(Paths.image("menus/titleOpts/mods")),
             onSelect: function() {
-                subMenu = new ModsList();
-                add(subMenu);
+                Game.addScene(ModsList, this);
             },
             trySelect: ModsList.trySelect
         }];
@@ -103,6 +101,10 @@ class Title extends BaseMenu {
     override function update(elapsed:Float) {
         super.update(elapsed);
 
+        logoScaling(elapsed);
+    }
+
+    public function logoScaling(elapsed:Float) {
         logo.scale.set(MathExtras.lerp(logo.scale.x, targetScale, elapsed * 10));
         Conductor.update(elapsed);
     }
@@ -112,7 +114,7 @@ class Title extends BaseMenu {
             Game.changeSceneTo(scenes.CharEdit);
         }
 
-        if (keyCode == acceptKeybind && cancelInput)
+        if (keyCode == acceptKeybind && waiting)
             acceptFinish(sound);
         else
             super.keyDown(keyCode, scanCode, mods);
@@ -127,7 +129,7 @@ class Title extends BaseMenu {
 
     public var acceptTwn:PropertyTween;
     function acceptFinish(snd) {
-        cancelInput = false;
+        waiting = false;
         sound.finished.remove(acceptFinish);
         sound.data = SoundData.getSoundData(Paths.audio("menus/scroll"));
         acceptTwn.reverse = false;
@@ -139,7 +141,7 @@ class Title extends BaseMenu {
         if (options[curItem].trySelect != null && !options[curItem].trySelect())
             return;
 
-        cancelInput = true;
+        waiting = true;
         sound.data = SoundData.getSoundData(Paths.audio("menus/confirm"));
         sound.play(0.0);
         sound.finished.add(acceptFinish);

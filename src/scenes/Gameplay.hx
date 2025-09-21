@@ -27,10 +27,6 @@ class Gameplay extends blueprint.Scene {
 	final white:Color = new Color(1.0);
 	final red:Color = new Color(1.0, 0.0, 0.0, 1.0);
 
-	public var fps:Text;
-	public var countedFrames:Int = 0;
-	public var untilFpsRegister:Float = 1;
-
 	public var hud:Group;
 	public var hudCamera:Camera;
 	public var leftIcon:HealthIcon;
@@ -132,9 +128,6 @@ class Gameplay extends blueprint.Scene {
 		}
 
 		addToHud(rating = new RatingPopup());
-		
-		hud.add(fps = new Text(0, -150, Paths.font("montserrat"), 24, "? FPS"));
-		fps.tint.setFull(0, 0, 0, 1);
 
 		hudCamera = new Camera();
 		hud.cameras = [hudCamera];
@@ -162,14 +155,6 @@ class Gameplay extends blueprint.Scene {
 
 	override function update(elapsed:Float) {
 		callScripts("preUpdate", [elapsed]);
-
-		++countedFrames;
-		untilFpsRegister -= elapsed;
-		if (untilFpsRegister <= 0.0) {
-			untilFpsRegister = 1.0;
-			fps.text = countedFrames + " FPS";
-			countedFrames = 0;
-		}
 
 		Conductor.update(elapsed);
 		mainCamera.zoom.set(MathExtras.lerp(mainCamera.zoom.x, stage.defaultZoom, elapsed * 60 * 0.05));

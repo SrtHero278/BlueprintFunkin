@@ -3,9 +3,6 @@ package scenes;
 import bindings.Glfw;
 
 class BaseMenu extends blueprint.Scene {
-    var cancelInput:Bool = false;
-    var subMenu:BaseMenu;
-
     var acceptKeybind:Int = Glfw.KEY_ENTER;
     var cancelKeybind:Int = Glfw.KEY_ESCAPE;
     var keybinds:Array<Int> = [Glfw.KEY_UP, Glfw.KEY_DOWN];
@@ -14,12 +11,6 @@ class BaseMenu extends blueprint.Scene {
     var curSubItem:Int;
 
     override function keyDown(keyCode:Int, scanCode:Int, mods:Int) {
-        if (subMenu != null) {
-            subMenu.keyDown(keyCode, scanCode, mods);
-            return;
-        } else if (cancelInput)
-            return;
-        
         if (keyCode == acceptKeybind) {
             accept();
             return;
@@ -40,11 +31,6 @@ class BaseMenu extends blueprint.Scene {
             curSubItem = (curSubItem + dir + getMaxSubItems()) % getMaxSubItems();
             changeSubItem(dir);
         }
-    }
-
-    override function keyUp(keyCode:Int, scanCode:Int, mods:Int) {
-        if (subMenu != null)
-            subMenu.keyUp(keyCode, scanCode, mods);
     }
 
     function changeItem(direction:Int) {}

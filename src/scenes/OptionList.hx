@@ -11,6 +11,7 @@ using StringTools;
 
 class OptionList extends BaseMenu {
 	public static var self:OptionList;
+	var title:Title;
 
 	public final options:Array<MenuOption> = [
 		new MenuOption("Chart Offset", "Additional time for the notes. (Higher = Later)", "chartOffset", Float(-1000, 1000, 1)),
@@ -36,9 +37,10 @@ class OptionList extends BaseMenu {
 		return options[curItem];
 	}
 
-	public function new() {
+	public function new(?title:Title) {
 		super();
 		self = this;
+		this.title = title;
 		subKeybinds = [bindings.Glfw.KEY_LEFT, bindings.Glfw.KEY_RIGHT];
 
 		add(list = new Text(10, 10, Paths.font("montserrat"), 32, ""));
@@ -58,6 +60,9 @@ class OptionList extends BaseMenu {
 
 	override function update(elapsed:Float) {
 		super.update(elapsed);
+
+		 if (title != null)
+			title.logoScaling(elapsed);
 
 		if (curDir != 0) {
 			holdTmr -= elapsed;
@@ -124,11 +129,9 @@ class OptionList extends BaseMenu {
 		self = null;
 		Settings.save("tempOptions.json");
 
-		var title:scenes.Title = cast memberOf;
-		title.subMenu = null;
-		title.acceptTwn.rewind();
+		if (title != null)
+			title.acceptTwn.rewind();
 
-		memberOf.remove(this);
 		sound.destroy();
 		destroy();
 	}

@@ -1,9 +1,9 @@
 package;
 
-import sys.FileSystem;
 import moonchart.backend.FormatDetector;
 import scenes.Title;
 import scenes.ModsList;
+import scenes.RenderStats;
 import music.GameSong;
 import bindings.CppHelpers;
 import blueprint.Game;
@@ -36,7 +36,7 @@ class Main {
 
 		objects.HScript.initParser();
 
-		game = new Game(1280, 720, "Blueprint Funkin", Title);
+		game = new Game(1280, 720, "Blueprint Funkin", Title, [RenderStats]);
 	}
 }
 

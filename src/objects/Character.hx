@@ -148,6 +148,7 @@ class Character extends blueprint.objects.AnimatedSprite {
 	}
 
 	override function update(elapsed:Float) {
+		super.update(elapsed);
 		if (!animData.exists(curAnim) || debugMode) return;
 
 		if (curAnimType == SINGING)
