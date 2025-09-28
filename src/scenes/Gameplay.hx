@@ -201,7 +201,13 @@ class Gameplay extends blueprint.Scene {
 		callScripts("update", [elapsed]);
 	}
 
+	override function destroy() {
+		callScripts("destroy");
+		super.destroy();
+	}
+
 	function songFinished(song:Song) {
+		callScripts("songFinished");
 		Game.changeSceneTo(scenes.Title);
 	}
 

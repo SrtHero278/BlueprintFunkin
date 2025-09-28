@@ -9,6 +9,9 @@ import blueprint.Game;
 var Settings:SettingData = new SettingData();
 
 class SettingData {
+	public var muted(default, set):Bool = false;
+	public var volume(default, set):Float = 1;
+
 	public var chartOffset:Float = 0;
 	public var downscroll:Bool = false;
 	public var centerField:Bool = false;
@@ -20,6 +23,17 @@ class SettingData {
 	public var downBinds:Array<Int> =	[Glfw.KEY_F, Glfw.KEY_DOWN];
 	public var upBinds:Array<Int> =		[Glfw.KEY_J, Glfw.KEY_UP];
 	public var rightBinds:Array<Int> =	[Glfw.KEY_K, Glfw.KEY_RIGHT];
+
+	function set_muted(to:Bool) {
+		Game.mixer.gain = to ? 0 : volume;
+		return muted = to;
+	}
+
+	function set_volume(to:Float) {
+		to = Math.min(Math.max(to, 0), 1);
+		Game.mixer.gain = muted ? 0 : to;
+		return volume = to;
+	}
 
 	function set_vSync(to:Bool):Bool {
 		return Game.window.vSync = (vSync = to);
