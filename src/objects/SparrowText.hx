@@ -1,10 +1,12 @@
 package objects;
 
 import math.Vector2;
+import blueprint.graphics.SpriteFrames.SpriteFrame;
 import blueprint.objects.AnimatedSprite;
 import blueprint.objects.Sprite;
 import blueprint.text.Text.TextAlignment;
 import blueprint.Game;
+import bindings.Glad;
 
 // might modify this later on but this will do.
 // Basically blueprint.objects.Text but with AnimatedSprite stuff.
@@ -13,6 +15,8 @@ class SparrowText extends AnimatedSprite {
 	var defaultAdvance:Float = 40;
 
 	var _queueSize:Bool = true;
+	var _frame:Int = 0;
+	var _frames:Array<SpriteFrame> = [];
 	var _failedChars:Array<String> = [];
 	var _lineWidths:Array<Float> = [];
 	var _textWidth:Float;
@@ -29,14 +33,14 @@ class SparrowText extends AnimatedSprite {
 		this.text = text;
 	}
 
-	override public function draw() {
+	override public function queueDraw() {
 		if (_queueSize)
 			updateTextSize();
 
 		_curX = 0.0;
 		_curLine = 0;
-		shader.setUniform("tint", tint);
 		animTime += Game.elapsed;
+		_frame = 0;
 		for (i in 0...text.length) {
 			var charAt = text.charAt(i);
 			if (charAt == '\n') {
@@ -48,42 +52,57 @@ class SparrowText extends AnimatedSprite {
 			final anim = tryAnim(charAt);
 			if (anim.indexes.length > 0) {
 				curFrame = anim.indexes[Math.floor((animTime % anim.length) * anim.fps)];
-				super.draw();
+				super.queueDraw();
+				_frames[_frame] = this.frame;
+				++_frame;
 				_curX += anim.width;
 			} else
 				_curX += defaultAdvance;
 		}
+		_frame = 0;
 	}
-	override function prepareShaderVars() {
-		final uMult = bindings.CppHelpers.boolToInt(flipX);
-		final vMult = bindings.CppHelpers.boolToInt(flipY);
-
+	override function prepareTransform() {
 		final sourceWidth = super.get_sourceWidth();
 		final sourceHeight = super.get_sourceHeight();
 		final width = sourceWidth * scale.x;
 		final height = sourceHeight * scale.y;
 
-		shader.transform.reset(1.0);
-		shader.transform.translate(Sprite._refVec3.set(
+		transform.reset(1.0);
+		transform.translate(Sprite._refVec3.set(
 			(_curX + dynamicOffset.x + frame.offsetX + (sourceWidth * 0.5) - (_textWidth * 0.5)) / sourceWidth,
 			(lineGap * _curLine + dynamicOffset.y + frame.offsetY + (lineGap - sourceHeight) + (sourceHeight * 0.5) - (_textHeight * 0.5)) / sourceHeight,
 			0
 		));
-		shader.transform.scale(Sprite._refVec3.set(width, height, 1));
+		transform.scale(Sprite._refVec3.set(width, height, 1));
 		if (_sinMult != 0)
-			shader.transform.rotate(_sinMult, _cosMult, Sprite._refVec3.set(0, 0, 1));
-		shader.transform.translate(Sprite._refVec3.set(
+			transform.rotate(_sinMult, _cosMult, Sprite._refVec3.set(0, 0, 1));
+		transform.translate(Sprite._refVec3.set(
 			position.x + renderOffset.x,
 			position.y + renderOffset.y,
 			0
 		));
-		shader.setUniform("transform", shader.transform);
+	}
 
-		bindings.Glad.uniform4f(bindings.Glad.getUniformLocation(shader.ID, "sourceRect"),
-			((sourceRect.x + frame.sourceX) + sourceWidth * uMult) / texture.width,
-			((sourceRect.y + frame.sourceY) + sourceHeight * vMult) / texture.height,
-			((sourceRect.x + frame.sourceX) + sourceWidth * (1 - uMult)) / texture.width,
-			((sourceRect.y + frame.sourceY) + sourceHeight * (1 - vMult)) / texture.height
+	override function draw() {
+		frame = _frames[_frame];
+		++_frame;
+
+		prepareTexture(texture);
+		Glad.useProgram(shader.ID);
+		prepareShaderVars();
+
+		Glad.bindVertexArray(Game.window.VAO);
+		Glad.drawElements(Glad.TRIANGLES, 6, Glad.UNSIGNED_INT, 0);
+	}
+
+	override function prepareShaderVars() {
+		shader.setUniform("transform", transform);
+		shader.setUniform("tint", tint);
+		Glad.uniform4f(Glad.getUniformLocation(shader.ID, "sourceRect"),
+			frame.sourceX / texture.width,
+			frame.sourceY / texture.height,
+			(frame.sourceX + frame.sourceWidth)  / texture.width,
+			(frame.sourceY + frame.sourceHeight)  / texture.height
 		);
 	}
 
@@ -104,6 +123,7 @@ class SparrowText extends AnimatedSprite {
 		_textHeight = lineGap;
 		_curX = 0.0;
 
+		var len = 0;
 		for (i in 0...text.length) {
 			var charAt = text.charAt(i);
 			if (charAt == '\n') {
@@ -116,7 +136,9 @@ class SparrowText extends AnimatedSprite {
 			final anim = tryAnim(charAt);
 			_curX += (anim.indexes.length > 0) ? anim.width : defaultAdvance;
 			_textWidth = Math.max(_curX, _textWidth);
+			len += (anim.indexes.length > 0) ? 1 : 0;
 		}
+		_frames.resize(len);
 		_lineWidths.push(_curX);
 	}
 	function tryAnim(char:String) {

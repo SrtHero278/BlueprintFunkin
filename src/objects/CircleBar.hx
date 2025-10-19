@@ -51,20 +51,7 @@ class CircleBar extends Sprite {
 
 		final sourceWidth = sourceWidth; // so im not constantly calling the setters.
 		final sourceHeight = sourceHeight;
-		final width = width;
-		final height = height;
-		
-		shader.transform.reset(1.0);
-		shader.transform.translate(Sprite._refVec3.set(dynamicOffset.x / sourceWidth, dynamicOffset.y / sourceHeight, 0));
-		shader.transform.scale(Sprite._refVec3.set(width, height, 1));
-		if (rotation != 0)
-			shader.transform.rotate(_sinMult, _cosMult, Sprite._refVec3.set(0, 0, 1));
-		shader.transform.translate(Sprite._refVec3.set(
-			position.x + renderOffset.x,
-			position.y + renderOffset.y,
-			0
-		));
-		shader.setUniform("transform", shader.transform);
+		shader.setUniform("transform", transform);
 
         shader.setUniform("offset", 0.15 * (1 - Math.pow(2 * percent - 1, 4)));
         shader.setUniform("angleOffset", radianOffset);
