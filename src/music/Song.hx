@@ -16,6 +16,7 @@ class Song {
 	public var name:String = "idk";
 	public var timingPoints:Array<TimingPoint> = [];
 	public var audio:Array<SoundPlayer> = [];
+	public var playing(get, set):Bool;
 	public var complete(get, never):Bool;
 	public var finished:Signal<Song->Void>;
 
@@ -37,6 +38,20 @@ class Song {
 		return get_time();
 	}
 
+	function get_playing() {
+		return audio.length > 0 && audio[0].playing;
+	}
+	function set_playing(value:Bool):Bool {
+		if (audio.length <= 0) return false;
+
+		if (value)
+			play();
+		else
+			pause();
+
+		return playing;
+	}
+
 	function get_complete() {
 		for (sound in audio) {
 			if (!sound.complete)
@@ -53,6 +68,11 @@ class Song {
 	public function pause() {
 		for (sound in audio)
 			sound.pause();
+	}
+
+	public function stop() {
+		for (sound in audio)
+			sound.stop();
 	}
 
 	public function destroy() {

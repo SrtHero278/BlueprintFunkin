@@ -168,6 +168,7 @@ class SongList extends BaseMenu {
 		if (title != null)
 			title.acceptTwn.rewind();
 
+		takeInput = false;
 		openTwn.rewind();
 		openTwn.deleteWhenDone = true;
 		openTwn.finished.add((twn) -> {

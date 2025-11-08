@@ -1,7 +1,6 @@
 package scenes;
 
 import sys.FileSystem;
-import blueprint.text.Text;
 import blueprint.objects.Camera;
 import blueprint.graphics.Texture;
 import blueprint.objects.Sprite;
@@ -139,9 +138,11 @@ class Gameplay extends blueprint.Scene {
 		DefaultEvents.interpetEvents(curSong.events);
 		DefaultEvents.retarget(0);
 		mainCamera.position.copyFrom(mainCamera.targetPosition);
-		curSong.time = 0;
+
+		Conductor.position = -Conductor.crochet * 3;
+		Conductor.autoplay = true;
 		curSong.looping = false;
-		curSong.play();
+		curSong.stop();
 		curSong.finished.add(songFinished);
 	}
 

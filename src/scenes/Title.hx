@@ -29,7 +29,6 @@ class Title extends BaseMenu {
     var rightArrow:Sprite;
     var optSprite:Sprite;
     var targetScale:Float = 0.9;
-    var waiting:Bool = false;
 
     public function new() {
         super();
@@ -54,11 +53,13 @@ class Title extends BaseMenu {
             trySelect: ModsList.trySelect
         }];
 
-        Song.setCurrentAsBasic("menus/music", "Freaky Menu", 102);
-        Song.current.looping = true;
-        Song.current.play();
-        Conductor.reset(102);
-        Conductor.beatOffset = -0.05;
+        if (Song.current == null || !Song.current.playing || Song.current.name != "Freaky Menu") {
+            Song.setCurrentAsBasic("menus/music", "Freaky Menu", 102);
+            Song.current.looping = true;
+            Song.current.play();
+            Conductor.reset(102);
+            Conductor.beatOffset = -0.05;
+        }
         Conductor.onBeat.add(beatHit);
         keybinds = [Glfw.KEY_LEFT, Glfw.KEY_RIGHT];
 
@@ -114,9 +115,10 @@ class Title extends BaseMenu {
             Game.changeSceneTo(scenes.CharEdit);
         }
 
-        if (keyCode == acceptKeybind && waiting)
-            acceptFinish(sound);
-        else
+        if (keyCode == acceptKeybind && acceptSnd != null) {
+            acceptSnd.stop();
+            acceptSnd.finished.emit(acceptSnd);
+        } else
             super.keyDown(keyCode, scanCode, mods);
     }
 
@@ -127,11 +129,10 @@ class Title extends BaseMenu {
         sound.play(0.0);
     }
 
+    var acceptSnd:SoundPlayer;
     public var acceptTwn:PropertyTween;
     function acceptFinish(snd) {
-        waiting = false;
-        sound.finished.remove(acceptFinish);
-        sound.data = SoundData.getSoundData(Paths.audio("menus/scroll"));
+        acceptSnd = null;
         acceptTwn.reverse = false;
         acceptTwn.start();
         options[curItem].onSelect();
@@ -141,10 +142,8 @@ class Title extends BaseMenu {
         if (options[curItem].trySelect != null && !options[curItem].trySelect())
             return;
 
-        waiting = true;
-        sound.data = SoundData.getSoundData(Paths.audio("menus/confirm"));
-        sound.play(0.0);
-        sound.finished.add(acceptFinish);
+        acceptSnd = SoundPlayer.quickPlay(Paths.audio("menus/confirm"));
+        acceptSnd.finished.add(acceptFinish);
         new PropertyTween(this, {tint: new Color(2.0)}, 0.5, EaseList.quadOut).reverse = true;
     }
 

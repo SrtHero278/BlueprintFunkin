@@ -31,6 +31,8 @@ package music;
 }
 
 class Conductor {
+    public static var autoplay:Bool = true;
+
     public static var bpm(get, default):Float = 120;
     public static var crochet(get, never):Float;
     public static var stepCrochet(get, never):Float;
@@ -73,7 +75,9 @@ class Conductor {
         if (Song.current != null && Song.current.audio.length > 0) {
             var lastTime = position;
             var points = Song.current.timingPoints;
-            position = Song.current.time;
+            position = (Song.current.playing) ? Song.current.time : position + elapsed;
+            if (autoplay && position >= 0 && lastTime < 0)
+                Song.current.play(position);
 
             var change = curChange;
             if (position < lastTime) {

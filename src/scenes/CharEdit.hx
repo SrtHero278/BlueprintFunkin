@@ -148,9 +148,6 @@ class CharEdit extends blueprint.Scene {
 		uiGroup.add(animList);
 
 		InputHandler.charInputted.add(charPress);
-		Song.current.time = 0;
-        Song.current.looping = true;
-        Song.current.play();
 	}
 
 	override function update(elapsed:Float) {
