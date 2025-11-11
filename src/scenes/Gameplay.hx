@@ -172,15 +172,15 @@ class Gameplay extends blueprint.Scene {
 
 		for (num in scoreNums.members)
 			num.position.y = MathExtras.lerp(num.position.y, 43 * 0.5, elapsed * 9);
-		scoreNums.tint = MathExtras.lerp(scoreNums.tint, white, elapsed * 5);
+		scoreNums.tint.lerpSelf(white, elapsed * 5);
 		
 		for (num in missNums.members)
 			num.position.y = MathExtras.lerp(num.position.y, 43 * 0.5, elapsed * 9);
-		missNums.tint = MathExtras.lerp(missNums.tint, white, elapsed * 5);
+		missNums.tint.lerpSelf(white, elapsed * 5);
 
 		for (num in accNums.members)
 			num.position.y = MathExtras.lerp(num.position.y, 43 * 0.5, elapsed * 9);
-		accNums.tint = MathExtras.lerp(accNums.tint, white, elapsed * 5);
+		accNums.tint.lerpSelf(white, elapsed * 5);
 
 		while (queuedNote < curSong.notes.length && curSong.notes[queuedNote].time - Conductor.position < 2) {
 			final data = curSong.notes[queuedNote];
