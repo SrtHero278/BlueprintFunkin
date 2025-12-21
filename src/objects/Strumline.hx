@@ -10,6 +10,7 @@ class Strumline extends Group {
 	public var keybinds:Array<Array<Int>> = []; // keep empty for cpu.
 	public var isCpu(get, never):Bool;
 	public var hit:Signal<Strumline->Note->Void>;
+	public var tick:Signal<Strumline->Note->Void>;
 	public var missed:Signal<Strumline->Note->Void>;
 
 	// Visual Stuff
@@ -24,6 +25,7 @@ class Strumline extends Group {
 		this.speed = speed;
 
 		hit = new Signal();
+		tick = new Signal();
 		missed = new Signal();
 
 		add(strums = new Group(0, -255));
@@ -62,9 +64,10 @@ class Strumline extends Group {
 	
 				if (note.untilTick <= 0.0) {
 					note.untilTick = Conductor.stepCrochet;
+					strum.playAnim("confirm", true);
+					tick.emit(this, note);
 					for (char in characters)
 						char.playAnim(note.singAnim);
-					strum.playAnim("confirm", true);
 				}
 				
 				if (note.length <= 0.0) {

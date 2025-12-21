@@ -115,9 +115,11 @@ class Gameplay extends blueprint.Scene {
 		strumlines.push(new Strumline(-0.25 - (1 / 16) * CppHelpers.boolToInt(Settings.centerField), curSong.speed));
 		strumlines[0].scale.set(1.0 - 0.5 * CppHelpers.boolToInt(Settings.centerField));
 		strumlines[0].hit.add(noteHit);
+		strumlines[0].tick.add(noteTick);
 		strumlines[0].missed.add(noteMissed);
 		strumlines.push(new Strumline(0.25 * CppHelpers.boolToInt(!Settings.centerField), curSong.speed));
 		strumlines[1].hit.add(noteHit);
+		strumlines[1].tick.add(noteTick);
 		strumlines[1].missed.add(noteMissed);
 		strumlines[1].keybinds = [Settings.leftBinds, Settings.downBinds, Settings.upBinds, Settings.rightBinds];
 
@@ -222,7 +224,8 @@ class Gameplay extends blueprint.Scene {
 	}
 
 	function noteHit(str:Strumline, note:Note) {
-		if (str.isCpu) return;
+		callScripts("noteHit", [str, note]);
+		if (str.isCpu || note.cancelScoring) return;
 
 		++stats.combo;
 		var judge = stats.getJudgement(Math.abs(note.hitTime - Conductor.position));
@@ -242,9 +245,18 @@ class Gameplay extends blueprint.Scene {
 
 		leftIcon.health = stats.health / stats.maxHealth;
 		rightIcon.health = stats.health / stats.maxHealth;
+		callScripts("postScore", [str, note]);
+	}
+	function noteTick(str:Strumline, note:Note) {
+		if (str.isCpu || note.cancelScoring) return;
+
+		stats.health = Math.min(Math.max(stats.health + 0.01, 0.0), stats.maxHealth);
+		stats.score += 10;
+		updateNums(Std.string(stats.score), scoreNums, 35, stats.curRank.color);
 	}
 	function noteMissed(str:Strumline, note:Note) {
-		if (str.isCpu) return;
+		callScripts("noteMissed", [str, note]);
+		if (str.isCpu || note.cancelScoring) return;
 
 		stats.combo = 0;
 		stats.addMiss();

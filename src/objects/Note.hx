@@ -13,6 +13,8 @@ class Note extends AnimatedSprite {
 	public var singAnim:String = "singLEFT";
 	public var missAnim:String = "singLEFTmiss";
 
+	public var cancelScoring:Bool = false;
+
 	public var wasHit:Bool = false;
 	public var holding:Bool;
 	public var untilTick:Float;
