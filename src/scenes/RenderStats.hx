@@ -7,6 +7,7 @@ class RenderStats extends blueprint.Scene {
     var text:Text;
     var bg:ColorRect;
     var untilUpdate:Float = 1.0;
+    var countedTicks:Int = 0;
     var countedFrames:Int = 0;
     
     public function new() {
@@ -26,14 +27,20 @@ class RenderStats extends blueprint.Scene {
     }
 
     override function update(elapsed:Float) {
-        ++countedFrames;
+        ++countedTicks;
         untilUpdate -= elapsed;
         if (untilUpdate <= 0.0) {
-            text.text = countedFrames + " FPS";
+            text.text = countedTicks + " TPS\n" + countedFrames + " FPS";
             bg.size.setFull(text.width + 10, text.height + 10);
 
             untilUpdate = 1.0;
             countedFrames = 0;
+            countedTicks = 0;
         }
+    }
+
+    override function queueDraw() {
+        ++countedFrames;
+        super.queueDraw();
     }
 }

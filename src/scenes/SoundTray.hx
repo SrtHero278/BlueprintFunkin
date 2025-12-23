@@ -88,7 +88,7 @@ class SoundTray extends blueprint.Scene {
 				timer = 1.5;
 				lerpYPos = 10;
 				lerpAlpha = 1;
-				scale.setFull(0.5, 0.5);
+				scale.setFull(0.6, 0.6);
 			case Glfw.KEY_EQUAL | Glfw.KEY_KP_ADD:
 				Settings.muted = false;
 				fill.visible = true;
@@ -98,7 +98,7 @@ class SoundTray extends blueprint.Scene {
 				} else {
 					Settings.volume += 0.1;
 					sndUp.play(0.0);
-					scale.setFull(0.5, 0.9);
+					scale.setFull(0.575, 0.825);
 				}
 				frozen = false;
 				timer = 1.5;
@@ -110,7 +110,7 @@ class SoundTray extends blueprint.Scene {
 				if (Settings.volume > 0) {
 					Settings.volume -= 0.1;
 					sndDown.play(0.0);
-					scale.setFull(0.9, 0.5);
+					scale.setFull(0.825, 0.575);
 				}
 				frozen = false;
 				timer = 1.5;

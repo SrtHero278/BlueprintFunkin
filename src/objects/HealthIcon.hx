@@ -34,10 +34,10 @@ class HealthIcon extends blueprint.objects.AnimatedSprite {
 			if (animData["winning"].indexes.length <= 0)
 				animData.remove("winning");
 		} else {
-			final text = Texture.getCachedTex(path);
+			final tex = Texture.getCachedTex(path);
 			
-			var iconSteps = Math.round(text.width / text.height);
-			loadTilesFromTex(text, text.width / iconSteps, text.height);
+			var iconSteps = Math.round(tex.width / tex.height);
+			loadTilesFromTex(tex, tex.width / iconSteps, tex.height);
 			
 			addBasicAnim("normal", [0], 1, false);
 			if (iconSteps >= 2)
