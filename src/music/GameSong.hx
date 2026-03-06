@@ -4,11 +4,11 @@ import moonchart.backend.FormatData;
 import moonchart.backend.FormatDetector;
 import moonchart.backend.Util.resolveEventValues;
 import moonchart.formats.BasicFormat;
+import moonchart.formats.StepMania;
 import moonchart.formats.fnf.legacy.FNFLegacy;
 import moonchart.parsers.StepManiaParser;
 import sys.FileSystem;
 import sys.io.File;
-import haxe.Json;
 import blueprint.sound.SoundPlayer;
 
 using StringTools;
@@ -106,14 +106,42 @@ class GameSong extends Song {
 		stage = (chartMeta.extraData.exists(STAGE)) ? chartMeta.extraData[STAGE] : "stage";
 		speed = (chartMeta.scrollSpeeds.exists(diff)) ? chartMeta.scrollSpeeds[diff] : 3.0;
 		
+		var timingIdx = 0;
+		var crotDiv = 1 / timingPoints[timingIdx].crochet;
+		inline function getRow(time:Float)
+			return Math.round(((time - timingPoints[timingIdx].time) * crotDiv) * 48);
+
 		final invertLanes = resolveInvert(diff);
 		notes = [];
 		for (note in data.getNotes(diff)) {
+			final time = (note.time - offset) * 0.001;
+			final lane = Math.floor(note.lane % 4);
+			final char = (invertLanes != (note.lane < 4)) ? 0 : 1;
+			while (timingIdx < timingPoints.length - 1 && timingPoints[timingIdx + 1].time < time) {
+				++timingIdx;
+				crotDiv = 1 / timingPoints[timingIdx].crochet;
+			}
+
+			final row = getRow(time);
+			var i = notes.length - 1;
+			var pushData = true;
+			while (i >= 0 && getRow(notes[i].time) == row) {
+				if (notes[i].char == char && notes[i].lane == lane) {
+					// override the stack data instead.
+					notes[i].length = Math.max(note.length, 0.0) * 0.001;
+					//notes[i].type = 
+					pushData = false;
+					break;
+				}
+				--i;
+			}
+			if (!pushData) continue;
+
 			final data:ChartNote = {
-				time: (note.time - offset) * 0.001,
-				lane: Math.floor(note.lane % 4),
+				time: time,
+				lane: lane,
 				length: Math.max(note.length, 0.0) * 0.001,
-				char: (invertLanes != (note.lane < 4)) ? 0 : 1
+				char: char
 			}
 			notes.push(data);
 		}
@@ -132,7 +160,7 @@ class GameSong extends Song {
 		var name = event.name;
 		var params:Array<Dynamic> = [];
 		switch (event.name) {
-			case moonchart.formats.fnf.legacy.FNFLegacy.FNF_LEGACY_MUST_HIT_SECTION_EVENT:
+			case FNFLegacy.FNF_LEGACY_MUST_HIT_SECTION_EVENT:
 				name = "Retarget Camera";
 				params = [event.data.mustHitSection ? 1 : 0];
 
@@ -192,18 +220,14 @@ class GameSong extends Song {
 		return switch (Type.getClass(data)) {
 			case moonchart.formats.OsuMania:
 				chartMeta.extraData.get(LANES_LENGTH) < 8;
-			case moonchart.formats.StepMania | moonchart.formats.StepManiaShark:
-				final sm:moonchart.formats.StepMania.StepManiaBasic<StepManiaFormat> = cast data;
+			case StepMania | moonchart.formats.StepManiaShark:
+				final sm:StepManiaBasic<StepManiaFormat> = cast data;
 				sm.data.NOTES.get(diff).dance == SINGLE;
 			case moonchart.formats.Quaver:
 				true; // its always gonna be 4-7 so
 			default:
 				false;
 		};
-	}
-
-	function sortNotes(note1:ChartNote, note2:ChartNote) {
-		return Math.floor(note1.time - note2.time);
 	}
 
 	override function loadAudio(path:String) {

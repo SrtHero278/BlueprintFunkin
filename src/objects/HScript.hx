@@ -8,6 +8,7 @@ class HScript {
 	public var path:String;
 	public var interp:Interp;
 	public var code:String;
+	public var curFunc:String = null;
 
 	public function new(?path:String, ?code:String = "", ?fullPath:Bool = false) {
 		this.code = code;
@@ -16,10 +17,11 @@ class HScript {
 			this.code += sys.io.File.getContent(this.path);
 
 		interp = new Interp();
+		interp.onError = printErr;
 		initVars();
 		try {
 			parser.line = 1;
-			final expr = parser.parseString(this.code, this.path);
+			final expr = parser.parseString(this.code, "Line");
 			interp.execute(expr);
 		} catch (e:hscript.Expr.Error) {
 			Sys.println('Failed to load ${this.path == null ? this.code : this.path}\n\t- ${e.toString()}');
@@ -45,14 +47,19 @@ class HScript {
 
 		final func = interp.variables.get(name);
 		if (func == null || !Reflect.isFunction(func)) return;
+		
+		var lastFunc = curFunc;
+		curFunc = name;
+		Reflect.callMethod(null, func, (args == null ? [] : args));
+		curFunc = lastFunc;
+	}
 
-		try {
-			Reflect.callMethod(null, func, (args == null ? [] : args));
-		} catch(e:hscript.Expr.Error) {
-			Sys.println('Failed to run \"$name\" on ${this.path == null ? this.code : this.path}\n\t- ${e.toString()}');
-		} catch (e:Dynamic) {
-			Sys.println('Failed to run \"$name\" on ${this.path == null ? this.code : this.path}\n\t- ${e.details()}');
-		}
+	public function printErr(e:hscript.Expr.Error) {
+		final suffix = " on " + this.path == null ? this.code : this.path + "\n  - " + StringTools.replace(e.toString(), "\n", "\n    - "); // would like to use \t but das a lotta spaces
+		if (curFunc != null)
+			Sys.println('Failed to run "$curFunc"' + suffix);
+		else
+			Sys.println('Failed to run code' + suffix);
 	}
 
 	public static function initParser() {

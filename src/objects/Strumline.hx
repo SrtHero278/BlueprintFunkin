@@ -15,8 +15,8 @@ class Strumline extends Group {
 
 	// Visual Stuff
 	public var characters:Array<Character> = [];
-	public var strums:Group;
-	public var notes:Group;
+	public var strums:Group<AnimatedSprite>;
+	public var notes:Group<Note>;
 	public var speed:Float = 3.2;
 	public var scrollMult(default, set):Float = 1;
 
@@ -52,9 +52,8 @@ class Strumline extends Group {
 
 	override function update(elapsed:Float) {
 		super.update(elapsed);
-		for (spr in notes.members) {
-			final note:Note = cast spr;
-			final strum:AnimatedSprite = cast strums.members[note.data.lane];
+		for (note in notes) {
+			final strum:AnimatedSprite = strums.members[note.data.lane];
 
 			if (note.holding) {
 				note.position.copyFrom(strum.position);
@@ -85,12 +84,12 @@ class Strumline extends Group {
 					char.playAnim(note.singAnim);
 				tryDeleteNote(note);
 			} else if (!isCpu && note.hitTime - Conductor.position < -hitWindow) {
-				if (!note.wasHit || note.length >= Conductor.stepCrochet * 0.5) {
+				if (!note.wasHit || note.length > hitWindow) {
 					missed.emit(this, note);
 					for (char in characters)
 						char.playAnim(note.missAnim);
 				}
-				note.memberOf.remove(note);
+				notes.remove(note);
 				note.destroy();
 			}
 	
@@ -107,10 +106,8 @@ class Strumline extends Group {
 		if (index < 0)
 			return;
 
-		final strum:AnimatedSprite = cast strums.members[index];
-		for (spr in notes.members) {
-			final note:Note = cast spr;
-
+		final strum:AnimatedSprite = strums.members[index];
+		for (note in notes) {
 			if (note.data.lane == index && Math.abs(note.hitTime - Conductor.position) <= hitWindow && !note.holding) {
 				strum.playAnim("confirm");
 				if (!note.wasHit) {
@@ -134,14 +131,12 @@ class Strumline extends Group {
 		if (index < 0)
 			return;
 
-		cast(strums.members[index], AnimatedSprite).playAnim("static", true);
-		for (spr in notes.members) {
-			final note:Note = cast spr;
-
+		strums.members[index].playAnim("static", true);
+		for (note in notes) {
 			if (note.data.lane == index && note.holding) {
 				note.holding = false;
 				note.hitTime = Conductor.position;
-				if (note.length < Conductor.stepCrochet * 0.5) {
+				if (note.length <= hitWindow) {
 					notes.remove(note);
 					note.destroy();
 				}
@@ -152,11 +147,11 @@ class Strumline extends Group {
 	function tryDeleteNote(note:Note) {
 		note.wasHit = true;
 		note.holding = (note.length > 0.0);
-		note.untilTick = Conductor.stepCrochet - (Conductor.position % Conductor.stepCrochet);
 		if (!note.holding) {
 			notes.remove(note);
 			note.destroy();
 		} else {
+			note.untilTick = Conductor.stepCrochet - (Conductor.position % Conductor.stepCrochet);
 			note.setLength(note.length + note.hitTime - Conductor.position, speed);
 		}
 	}
@@ -167,10 +162,8 @@ class Strumline extends Group {
 
 	function set_scrollMult(newMult:Float) {
 		strums.position.y = notes.position.y = -255 * newMult;
-		for (spr in notes.members) {
-			final note:Note = cast spr;
+		for (note in notes.members)
 			note.holdScale = newMult;
-		}
 		return scrollMult = newMult;
 	}
 }

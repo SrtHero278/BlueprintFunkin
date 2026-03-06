@@ -35,6 +35,7 @@ class Main {
 		ModsList.trySelect();
 		Paths.foldersToCheck[0] = "assets/" + ModsList.mods[0];
 
+		hscript.Printer.printFullException = true;
 		objects.HScript.initParser();
 
 		game = new Game(1280, 720, "Blueprint Funkin", Title, [RenderStats, SoundTray]);
